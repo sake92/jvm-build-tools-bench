@@ -15,6 +15,8 @@ Outputs (written to --output-dir/<repo>/):
   summary.md            markdown comparison tables, one section per scenario
   chart-<scenario>.svg  horizontal bar chart per scenario (requires matplotlib)
 
+Also writes --output-dir/index.html: per-repo collapsible sections with lazy-loaded SVGs.
+
 ASCII bar charts are also printed to stdout (useful in CI logs, no extra deps).
 
 Usage:
@@ -22,6 +24,7 @@ Usage:
 """
 
 import argparse
+import datetime
 import json
 import sys
 from collections import defaultdict
@@ -199,6 +202,79 @@ def write_svg_chart(repo: str, scenario: str, entries: list[dict], output_dir: P
     print(f"  Wrote {out}")
 
 
+# ── HTML index ───────────────────────────────────────────────────────────────
+
+_HTML_CSS = """
+  body { font-family: system-ui, sans-serif; max-width: 960px; margin: 2rem auto; padding: 0 1rem; color: #222; }
+  h1 { font-size: 1.6rem; }
+  details { border: 1px solid #ddd; border-radius: 6px; margin: 1rem 0; }
+  summary { cursor: pointer; padding: 0.75rem 1rem; font-size: 1.1rem; font-weight: 600;
+            background: #f5f5f5; border-radius: 6px; list-style: none; }
+  summary::-webkit-details-marker { display: none; }
+  summary::before { content: "▶ "; font-size: 0.8em; color: #666; }
+  details[open] summary::before { content: "▼ "; }
+  .repo-body { padding: 1rem; }
+  .charts { display: flex; flex-wrap: wrap; gap: 1rem; }
+  figure { margin: 0; flex: 1 1 400px; }
+  figure img { width: 100%; height: auto; border: 1px solid #eee; border-radius: 4px; }
+  figcaption { font-size: 0.85rem; color: #555; margin-top: 0.3rem; text-align: center; }
+  .links { margin-top: 0.75rem; font-size: 0.9rem; }
+  .links a { margin-right: 1rem; color: #0066cc; }
+  footer { margin-top: 2rem; font-size: 0.8rem; color: #999; }
+"""
+
+def write_index_html(all_data: dict, output_dir: Path):
+    timestamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    sections = []
+
+    for i, (repo, data) in enumerate(sorted(all_data.items())):
+        open_attr = " open" if i == 0 else ""
+        charts_html = "\n".join(
+            f'      <figure>\n'
+            f'        <img src="{repo}/chart-{scenario}.svg" alt="{scenario} chart" loading="lazy">\n'
+            f'        <figcaption>{scenario.replace("-", " ").title()}</figcaption>\n'
+            f'      </figure>'
+            for scenario in sorted(data.keys())
+        )
+        sections.append(f"""\
+  <details{open_attr}>
+    <summary>{repo}</summary>
+    <div class="repo-body">
+      <div class="charts">
+{charts_html}
+      </div>
+      <div class="links">
+        <a href="{repo}/summary.json">summary.json</a>
+        <a href="{repo}/summary.md">summary.md</a>
+      </div>
+    </div>
+  </details>""")
+
+    html = f"""\
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JVM Build Tools Benchmark</title>
+  <style>{_HTML_CSS}  </style>
+</head>
+<body>
+  <h1>JVM Build Tools Benchmark</h1>
+  <p>Compilation time comparison across build tools on real-world repos.
+     Each chart shows mean time (lower is better).</p>
+
+{"".join(chr(10) + s for s in sections)}
+
+  <footer>Generated {timestamp}</footer>
+</body>
+</html>
+"""
+    out = output_dir / "index.html"
+    out.write_text(html)
+    print(f"  Wrote {out}")
+
+
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 def main():
@@ -229,6 +305,8 @@ def main():
             ascii_bar_chart(repo, scenario, entries)
             write_svg_chart(repo, scenario, entries, repo_out)
 
+    output_dir.mkdir(parents=True, exist_ok=True)
+    write_index_html(all_data, output_dir)
     print("\nDone.")
 
 

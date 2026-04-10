@@ -1,0 +1,140 @@
+amends "https://sake92.github.io/deder/config/early-access/DederProject.pkl"
+
+local const _root = new ScalaModule {
+  id = "_root"
+  root = "."
+  scalaVersion = "2.13.11"
+  sources = new Listing {
+    "src/main/scala"
+  }
+  resources = new Listing {
+    "src/main/resources"
+  }
+  deps {
+    "com.beachape::enumeratum:1.7.0"
+    "com.github.pureconfig::pureconfig:0.17.0"
+    "ch.qos.logback:logback-classic:1.2.6"
+    "org.scalatest::scalatest:3.2.10"
+    "org.scalatestplus::mockito-3-4:3.2.10.0"
+    "org.scalactic::scalactic:3.2.10"
+    "com.vladsch.flexmark:flexmark-all:0.62.2"
+  }
+  scalacOptions {
+    "-encoding"
+    "utf8"
+    "-explaintypes"
+    "-feature"
+    "-language:existentials"
+    "-language:experimental.macros"
+    "-language:higherKinds"
+    "-language:implicitConversions"
+    "-unchecked"
+    "-Xcheckinit"
+    "-Xfatal-warnings"
+    "-Xlint:adapted-args"
+    "-Xlint:constant"
+    "-Xlint:delayedinit-select"
+    "-Xlint:deprecation"
+    "-Xlint:doc-detached"
+    "-Xlint:inaccessible"
+    "-Xlint:infer-any"
+    "-Xlint:missing-interpolator"
+    "-Xlint:nullary-unit"
+    "-Xlint:option-implicit"
+    "-Xlint:package-object-classes"
+    "-Xlint:poly-implicit-overload"
+    "-Xlint:private-shadow"
+    "-Xlint:stars-align"
+    "-Xlint:strict-unsealed-patmat"
+    "-Xlint:type-parameter-shadow"
+    "-Xlint:-byname-implicit"
+    "-Wunused:nowarn"
+    "-Wdead-code"
+    "-Wextra-implicit"
+    "-Wnumeric-widen"
+    "-Wunused:implicits"
+    "-Wunused:explicits"
+    "-Wunused:imports"
+    "-Wunused:locals"
+    "-Wunused:params"
+    "-Wunused:patvars"
+    "-Wunused:privates"
+    "-Wvalue-discard"
+    "-Vimplicits"
+    "-Vtype-diffs"
+  }
+  scalacPluginDeps {
+    "org.typelevel:::kind-projector:0.13.2"
+    "com.olegpy::better-monadic-for:0.3.1"
+  }
+}
+
+local const rootTest = new ScalaTestModule {
+  id = "rootTest"
+  root = "."
+  scalaVersion = "2.13.11"
+  sources = new Listing {
+    "src/test/scala"
+  }
+  resources = new Listing {
+    "src/test/resources"
+  }
+  moduleDeps {
+    _root
+  }
+  deps {
+    "org.scalatest::scalatest:3.2.10"
+    "org.scalatestplus::mockito-3-4:3.2.10.0"
+    "org.scalactic::scalactic:3.2.10"
+    "com.vladsch.flexmark:flexmark-all:0.62.2"
+  }
+  scalacOptions {
+    "-encoding"
+    "utf8"
+    "-explaintypes"
+    "-feature"
+    "-language:existentials"
+    "-language:experimental.macros"
+    "-language:higherKinds"
+    "-language:implicitConversions"
+    "-unchecked"
+    "-Xcheckinit"
+    "-Xfatal-warnings"
+    "-Xlint:adapted-args"
+    "-Xlint:constant"
+    "-Xlint:delayedinit-select"
+    "-Xlint:deprecation"
+    "-Xlint:doc-detached"
+    "-Xlint:inaccessible"
+    "-Xlint:infer-any"
+    "-Xlint:missing-interpolator"
+    "-Xlint:nullary-unit"
+    "-Xlint:option-implicit"
+    "-Xlint:package-object-classes"
+    "-Xlint:poly-implicit-overload"
+    "-Xlint:private-shadow"
+    "-Xlint:stars-align"
+    "-Xlint:strict-unsealed-patmat"
+    "-Xlint:type-parameter-shadow"
+    "-Xlint:-byname-implicit"
+    "-Wunused:nowarn"
+    "-Wdead-code"
+    "-Wextra-implicit"
+    "-Wnumeric-widen"
+    "-Wunused:implicits"
+    "-Wunused:explicits"
+    "-Wunused:imports"
+    "-Wunused:locals"
+    "-Wunused:params"
+    "-Wunused:patvars"
+    "-Wunused:privates"
+    "-Wvalue-discard"
+    "-Vimplicits"
+    "-Vtype-diffs"
+  }
+}
+
+modules {
+  _root
+  rootTest
+}

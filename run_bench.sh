@@ -24,8 +24,7 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --tool)        TOOL="$2";        shift 2 ;;
     --results-dir) RESULTS_DIR="$2"; shift 2 ;;
-    --repos-dir)   REPOS_DIR="$2";   shift 2 ;;
-    *) echo "Unknown argument: $1" >&2; exit 1 ;;
+    --repos-dir)   REPOS_DIR="$2";   shift 2 ;;    *) echo "Unknown argument: $1" >&2; exit 1 ;;
   esac
 done
 
@@ -33,6 +32,10 @@ if [[ -z "$TOOL" ]]; then
   echo "Usage: $0 --tool <name> [--results-dir <dir>] [--repos-dir <dir>]" >&2
   exit 1
 fi
+
+# Resolve to absolute paths so they remain valid after pushd into the repo dir
+RESULTS_DIR="$(mkdir -p "$RESULTS_DIR" && cd "$RESULTS_DIR" && pwd)"
+REPOS_DIR="$(mkdir -p "$REPOS_DIR" && cd "$REPOS_DIR" && pwd)"
 
 # ── helpers ───────────────────────────────────────────────────────────────
 yq_tool() { yq ".tools[] | select(.name == \"$TOOL\") | $1" "$CONFIG"; }

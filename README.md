@@ -69,13 +69,19 @@ Each file is a standard hyperfine JSON export — use `cat results/maven-clean.j
 
 ## Results
 
-After a CI run, download the **`results-aggregated`** artifact from the Actions tab. It contains:
+Results are published to **GitHub Pages** after each CI run:
+> `https://<your-org>.github.io/jvm-build-tools-bench/`
+
+The page has one collapsible section per repo with SVG bar charts for each scenario.
+
+You can also download the **`results-aggregated`** artifact from the Actions tab. It contains:
 
 | File | Contents |
 |---|---|
-| `summary.json` | Mean / stddev / min / max per tool per scenario |
-| `summary.md` | Markdown comparison table (one section per scenario) |
-| `chart-<scenario>.svg` | Horizontal bar chart per scenario |
+| `index.html` | Static results page (charts + links) |
+| `<repo>/summary.json` | Mean / stddev / min / max per tool per scenario |
+| `<repo>/summary.md` | Markdown comparison table (one section per scenario) |
+| `<repo>/chart-<scenario>.svg` | Horizontal bar chart per scenario |
 
 To run aggregation locally after collecting results:
 
@@ -85,6 +91,8 @@ python aggregate.py --results-dir results/ --output-dir aggregated/
 ```
 
 ASCII bar charts are also printed to stdout during aggregation (handy for reading directly in CI logs).
+
+> **Note:** Enable GitHub Pages in your repo settings with source branch `gh-pages` for the published URL to work.
 
 ---
 

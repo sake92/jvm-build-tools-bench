@@ -104,3 +104,21 @@ jobs:
           name: results-aggregated
           path: aggregated/
           retention-days: 90
+
+  # ── Step 4: publish index.html + charts to GitHub Pages ───────────────────
+  deploy-pages:
+    needs: aggregate
+    runs-on: ubuntu-latest
+    if: always()
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: results-aggregated
+          path: aggregated/
+      - uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: aggregated/
+          keep_files: false
