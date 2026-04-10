@@ -27,6 +27,7 @@ repos:
     ref: de555349d5effb87962d3116eb08c9f374065112  # master @ 2026-04-10
 
 tools:
+  ######### java-algorithms #########
   # ── java-algorithms: Maven ──────────────────────────────────────────────────────────
   - name: maven
     repo: java-algorithms
@@ -56,7 +57,7 @@ tools:
   #  hyperfine_runs: 10
 
   # ── java-algorithms: Mill ───────────────────────────────────────────────────────────
-  # build-files/java-algorithms/mill/ is auto-overlaid onto the cloned repo
+  # build-files/java-algorithms/mill/ is copied over the cloned repo
   - name: mill
     repo: java-algorithms
     install: |
@@ -74,7 +75,6 @@ tools:
     hyperfine_runs: 10
 
   # ── java-algorithms: Deder ───────────────────────────────────────────────────────────
-  # build-files/java-algorithms/deder/ is auto-overlaid onto the cloned repo (if present)
   - name: deder
     repo: java-algorithms
     install: "brew install sake92/tap/deder"
@@ -88,6 +88,7 @@ tools:
     hyperfine_warmup: 2
     hyperfine_runs: 10
 
+  ######### scala-algorithms #########
   # ── scala-algorithms: sbt ───────────────────────────────────────────────────────────
   - name: sbt
     repo: scala-algorithms
@@ -113,3 +114,28 @@ tools:
     shutdown: "sbt --client shutdown || true"
     hyperfine_warmup: 2
     hyperfine_runs: 10
+
+  # ── scala-algorithms: Deder ───────────────────────────────────────────────────────────
+  - name: deder
+    repo: scala-algorithms
+    install: "brew install sake92/tap/deder"
+    setup: "deder exec -t compile"
+    compile_clean: "deder clean && deder exec -t compile"
+    compile_incremental: "deder exec -t compile"
+    incremental_files:
+      - src/main/scala/Sort/BubbleSort.scala
+      - src/main/scala/Sort/MergeSort.scala
+    shutdown: "deder shutdown || true"
+    hyperfine_warmup: 2
+    hyperfine_runs: 10
+
+
+
+
+
+
+
+
+
+
+
