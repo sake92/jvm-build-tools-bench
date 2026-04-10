@@ -1,5 +1,7 @@
 # jvm-build-tools-bench
 
+> Just a naive mini benchmark!
+
 Benchmarks comparing JVM build tools (Maven, Gradle, Mill, sbt, …) on real-world open-source repositories using [hyperfine](https://github.com/sharkdp/hyperfine).
 
 Two scenarios are measured per tool:
