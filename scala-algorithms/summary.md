@@ -1,13 +1,8 @@
 # JVM Build Tools Benchmark — scala-algorithms
 
-## Clean
+## Compile
 
 | Tool | Mean | Stddev | Min | Max |
 |------|-----:|-------:|----:|----:|
-| sbt | 1715.9 ms | ± 372.0 ms | 1238.7 ms | 2333.1 ms |
-
-## Incremental
-
-| Tool | Mean | Stddev | Min | Max |
-|------|-----:|-------:|----:|----:|
-| sbt | 181.0 ms | ± 14.8 ms | 155.7 ms | 199.3 ms |
+| sbt-incremental | 140.9 ms | ± 9.3 ms | 127.1 ms | 159.1 ms |
+| sbt-clean | 1116.7 ms | ± 160.3 ms | 843.8 ms | 1360.9 ms |

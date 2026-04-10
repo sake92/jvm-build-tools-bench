@@ -1,17 +1,10 @@
 # JVM Build Tools Benchmark — java-algorithms
 
-## Clean
+## Compile
 
 | Tool | Mean | Stddev | Min | Max |
 |------|-----:|-------:|----:|----:|
-| deder | 6926.8 ms | ± 1265.3 ms | 5438.1 ms | 9001.2 ms |
-| mill | 8717.3 ms | ± 692.8 ms | 8120.9 ms | 10381.0 ms |
-| maven | 10180.2 ms | ± 143.7 ms | 9966.0 ms | 10459.1 ms |
-
-## Incremental
-
-| Tool | Mean | Stddev | Min | Max |
-|------|-----:|-------:|----:|----:|
-| mill | 294.5 ms | ± 31.2 ms | 251.4 ms | 330.9 ms |
-| deder | 447.0 ms | ± 51.6 ms | 371.6 ms | 545.0 ms |
-| maven | 10307.9 ms | ± 203.1 ms | 10061.1 ms | 10722.3 ms |
+| mill-incremental | 181.3 ms | ± 34.1 ms | 123.6 ms | 219.9 ms |
+| mill-clean | 5897.2 ms | ± 301.5 ms | 5582.8 ms | 6478.6 ms |
+| maven-incremental | 6121.7 ms | ± 202.5 ms | 5746.9 ms | 6304.1 ms |
+| maven-clean | 6181.7 ms | ± 141.3 ms | 5997.6 ms | 6437.4 ms |
