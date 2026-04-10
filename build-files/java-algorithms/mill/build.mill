@@ -1,0 +1,22 @@
+//| mill-version: 1.1.2
+package build
+
+import mill.*
+import mill.javalib.*
+import mill.scalalib.*
+import mill.api.Task.Simple
+import mill.util.JarManifest
+
+object `package` extends MavenModule {
+  def mvnDeps = Seq(
+    mvn"org.apache.commons:commons-lang3:3.20.0",
+    mvn"org.apache.commons:commons-collections4:4.5.0"
+  )
+  object test extends MavenTests, TestModule.Junit5 {
+    def mvnDeps = Seq(
+      mvn"org.junit.jupiter:junit-jupiter:5.10.1",
+      mvn"org.assertj:assertj-core:3.27.6",
+      mvn"org.mockito:mockito-core:5.20.0"
+    )
+  }
+}
