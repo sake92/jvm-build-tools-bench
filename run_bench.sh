@@ -110,8 +110,8 @@ fi
 
 # ── prepare results directory ──────────────────────────────────────────────
 mkdir -p "$RESULTS_DIR/$REPO_NAME"
-CLEAN_JSON="$RESULTS_DIR/$REPO_NAME/${TOOL}-clean.json"
-INCR_JSON="$RESULTS_DIR/$REPO_NAME/${TOOL}-incremental.json"
+CLEAN_JSON="$RESULTS_DIR/$REPO_NAME/${TOOL}-clean-compile.json"
+INCR_JSON="$RESULTS_DIR/$REPO_NAME/${TOOL}-incremental-compile.json"
 
 # ── run setup (dep download / daemon warm-up) ──────────────────────────────
 pushd "$REPO_DIR" > /dev/null
