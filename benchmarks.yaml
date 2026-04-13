@@ -112,7 +112,7 @@ tools:
       sed -i 's/scalaVersion := "2.13.6",/scalaVersion := "2.13.11",/g' build.sbt
       sbt --client compile
     compile_clean: |
-      sbt --client 'clean; compile; test:compile'
+      sbt --client 'clean; test:clean; compile; test:compile'
     compile_incremental: "sbt --client compile"
     incremental_files:
       - src/main/scala/Sort/BubbleSort.scala
