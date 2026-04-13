@@ -106,7 +106,8 @@ ASCII bar charts are also printed to stdout during aggregation (handy for readin
 
 1. Add an entry to `benchmarks.yaml` with a `repo` and `build_tool_name` (copy an existing one as a template).
 2. If the target repo doesn't have a native build file for this tool, add it under `build-files/<repo>/<tool>/`.
-3. That's it — GitHub Actions will pick it up automatically on the next run.
+3. Add the tool's chart color in `tool_colors.py` so aggregated SVGs stay consistent.
+4. That's it — GitHub Actions will pick it up automatically on the next run.
 
 ---
 

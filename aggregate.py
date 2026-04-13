@@ -31,6 +31,7 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 
+from tool_colors import get_tool_color
 
 SCENARIO_ALIASES = {
     "clean-compile": "clean-compile",
@@ -84,6 +85,7 @@ def load_results(results_dir: Path) -> dict[str, dict[str, list[dict]]]:
             continue
 
         tool, scenario = parsed
+        get_tool_color(tool)
 
         try:
             data = json.loads(path.read_text())
@@ -192,12 +194,11 @@ def write_svg_chart(repo: str, scenario: str, entries: list[dict], output_dir: P
     fig_height = max(3, len(tools) * 0.6 + 1.2)
     fig, ax = plt.subplots(figsize=(10, fig_height))
 
-    colors = plt.cm.tab10.colors
     bars = ax.barh(
         tools, means,
         xerr=errors,
         capsize=4,
-        color=[colors[i % len(colors)] for i in range(len(tools))],
+        color=[get_tool_color(tool) for tool in tools],
         edgecolor="white",
         linewidth=0.5,
         error_kw={"elinewidth": 1.2, "ecolor": "#555"},
@@ -307,7 +308,11 @@ def main():
         sys.exit(1)
 
     print(f"Scanning {results_dir} for benchmark results...")
-    all_data = load_results(results_dir)
+    try:
+        all_data = load_results(results_dir)
+    except ValueError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
 
     if not all_data:
         print("No benchmark results found.", file=sys.stderr)
