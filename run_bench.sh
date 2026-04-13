@@ -40,9 +40,11 @@ REPOS_DIR="$(mkdir -p "$REPOS_DIR" && cd "$REPOS_DIR" && pwd)"
 # ── helpers ───────────────────────────────────────────────────────────────
 yq_tool() { yq ".tools[] | select(.name == \"$TOOL\") | $1" "$CONFIG"; }
 yq_repo() { local repo_name="$1"; yq ".repos[] | select(.name == \"$repo_name\") | $2" "$CONFIG"; }
+yq_global() { yq "$1" "$CONFIG"; }
 
 # Return empty string instead of "null" for optional fields
 yq_opt() { local val; val=$(yq_tool "$1"); [[ "$val" == "null" ]] && echo "" || echo "$val"; }
+yq_req() { local val; val=$(yq_global "$1"); [[ "$val" == "null" || -z "$val" ]] && die "Missing required config field: $1" || echo "$val"; }
 
 die() { echo "ERROR: $*" >&2; exit 1; }
 
@@ -58,8 +60,10 @@ COMPILE_CLEAN=$(yq_tool ".compile_clean")
 COMPILE_INCR=$(yq_tool ".compile_incremental")
 SHUTDOWN=$(yq_opt ".shutdown")
 
-WARMUP=$(yq_tool ".hyperfine_warmup")
-RUNS=$(yq_tool ".hyperfine_runs")
+CLEAN_WARMUP=$(yq_req ".hyperfine.clean_compile.warmup")
+CLEAN_RUNS=$(yq_req ".hyperfine.clean_compile.runs")
+INCR_WARMUP=$(yq_req ".hyperfine.incremental_compile.warmup")
+INCR_RUNS=$(yq_req ".hyperfine.incremental_compile.runs")
 
 # incremental_files as a bash array (yq outputs one per line with -r style)
 mapfile -t INCR_FILES < <(yq ".tools[] | select(.name == \"$TOOL\") | .incremental_files[]" "$CONFIG")
@@ -123,11 +127,11 @@ fi
 
 # ── benchmark: clean compile ──────────────────────────────────────────────
 echo ""
-echo ">>> Benchmarking clean compile (warmup=$WARMUP, runs=$RUNS)..."
+echo ">>> Benchmarking clean compile (warmup=$CLEAN_WARMUP, runs=$CLEAN_RUNS)..."
 hyperfine \
   --shell bash \
-  --warmup "$WARMUP" \
-  --runs "$RUNS" \
+  --warmup "$CLEAN_WARMUP" \
+  --runs "$CLEAN_RUNS" \
   --export-json "$CLEAN_JSON" \
   "$COMPILE_CLEAN"
 
@@ -138,11 +142,11 @@ for f in "${INCR_FILES[@]}"; do
   touch "$REPO_DIR/$f"
 done
 
-echo ">>> Benchmarking incremental compile (warmup=1, runs=$RUNS)..."
+echo ">>> Benchmarking incremental compile (warmup=$INCR_WARMUP, runs=$INCR_RUNS)..."
 hyperfine \
   --shell bash \
-  --warmup 1 \
-  --runs "$RUNS" \
+  --warmup "$INCR_WARMUP" \
+  --runs "$INCR_RUNS" \
   --export-json "$INCR_JSON" \
   "$COMPILE_INCR"
 

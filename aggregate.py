@@ -7,13 +7,14 @@ Expected input layout (produced by run_bench.sh):
     <repo>/
       <tool>-<scenario>.json   (hyperfine JSON export)
 
-Repos, tools, and scenarios are all discovered dynamically from the directory
-structure and filenames — no hardcoding needed.
+Repos and tools are discovered dynamically from the directory structure and
+filenames. Scenario names are matched against a small canonical set so
+multi-word names like `clean-compile` stay stable.
 
-Outputs (written to --output-dir/<repo>/):
-  summary.json          structured data: mean/stddev/min/max per scenario per tool
-  summary.md            markdown comparison tables, one section per scenario
-  chart-<scenario>.svg  horizontal bar chart per scenario (requires matplotlib)
+Outputs (written to --output-dir/<repo>/<scenario>/):
+  summary.json  structured data: mean/stddev/min/max per tool for one scenario
+  summary.md    markdown comparison table for one scenario
+  chart.svg     horizontal bar chart for one scenario (requires matplotlib)
 
 Also writes --output-dir/index.html: per-repo collapsible sections with lazy-loaded SVGs.
 
@@ -31,6 +32,14 @@ from collections import defaultdict
 from pathlib import Path
 
 
+SCENARIO_ALIASES = {
+    "clean-compile": "clean-compile",
+    "incremental-compile": "incremental-compile",
+    "clean": "clean-compile",
+    "incremental": "incremental-compile",
+}
+
+
 # ── CLI ──────────────────────────────────────────────────────────────────────
 
 def parse_args():
@@ -43,6 +52,17 @@ def parse_args():
 
 
 # ── Data loading ──────────────────────────────────────────────────────────────
+
+def parse_result_stem(stem: str) -> tuple[str, str] | None:
+    for suffix, scenario in sorted(
+        SCENARIO_ALIASES.items(), key=lambda entry: len(entry[0]), reverse=True
+    ):
+        needle = f"-{suffix}"
+        if stem.endswith(needle):
+            tool = stem[: -len(needle)]
+            if tool:
+                return tool, scenario
+    return None
 
 def load_results(results_dir: Path) -> dict[str, dict[str, list[dict]]]:
     """
@@ -58,11 +78,12 @@ def load_results(results_dir: Path) -> dict[str, dict[str, list[dict]]]:
         repo = path.parent.name   # immediate parent dir = repo name
         stem = path.stem          # e.g. "maven-clean"
 
-        if "-" not in stem:
-            print(f"  Skipping {path} (no '-' in stem)", file=sys.stderr)
+        parsed = parse_result_stem(stem)
+        if parsed is None:
+            print(f"  Skipping {path} (unknown scenario suffix)", file=sys.stderr)
             continue
 
-        tool, scenario = stem.rsplit("-", 1)
+        tool, scenario = parsed
 
         try:
             data = json.loads(path.read_text())
@@ -97,9 +118,13 @@ def load_results(results_dir: Path) -> dict[str, dict[str, list[dict]]]:
 
 # ── JSON summary ──────────────────────────────────────────────────────────────
 
-def write_summary_json(data: dict, output_dir: Path):
+def write_summary_json(repo: str, scenario: str, entries: list[dict], output_dir: Path):
     out = output_dir / "summary.json"
-    out.write_text(json.dumps(data, indent=2))
+    out.write_text(json.dumps({
+        "repo": repo,
+        "scenario": scenario,
+        "entries": entries,
+    }, indent=2))
     print(f"  Wrote {out}")
 
 
@@ -108,22 +133,19 @@ def write_summary_json(data: dict, output_dir: Path):
 def fmt_ms(seconds: float) -> str:
     return f"{seconds * 1000:.1f} ms"
 
-def write_summary_md(repo: str, data: dict, output_dir: Path):
-    lines = [f"# JVM Build Tools Benchmark — {repo}\n"]
-
-    for scenario, entries in data.items():
-        lines.append(f"## {scenario.replace('-', ' ').title()}\n")
-        lines.append("| Tool | Mean | Stddev | Min | Max |")
-        lines.append("|------|-----:|-------:|----:|----:|")
-        for e in entries:
-            lines.append(
-                f"| {e['tool']} "
-                f"| {fmt_ms(e['mean'])} "
-                f"| ± {fmt_ms(e['stddev'])} "
-                f"| {fmt_ms(e['min'])} "
-                f"| {fmt_ms(e['max'])} |"
-            )
-        lines.append("")
+def write_summary_md(repo: str, scenario: str, entries: list[dict], output_dir: Path):
+    lines = [f"# JVM Build Tools Benchmark — {repo} — {scenario.replace('-', ' ').title()}\n"]
+    lines.append("| Tool | Mean | Stddev | Min | Max |")
+    lines.append("|------|-----:|-------:|----:|----:|")
+    for e in entries:
+        lines.append(
+            f"| {e['tool']} "
+            f"| {fmt_ms(e['mean'])} "
+            f"| ± {fmt_ms(e['stddev'])} "
+            f"| {fmt_ms(e['min'])} "
+            f"| {fmt_ms(e['max'])} |"
+        )
+    lines.append("")
 
     out = output_dir / "summary.md"
     out.write_text("\n".join(lines))
@@ -196,7 +218,7 @@ def write_svg_chart(repo: str, scenario: str, entries: list[dict], output_dir: P
     ax.set_xlim(0, max(means) * 1.2)
 
     plt.tight_layout()
-    out = output_dir / f"chart-{scenario}.svg"
+    out = output_dir / "chart.svg"
     fig.savefig(out, format="svg", bbox_inches="tight")
     plt.close(fig)
     print(f"  Wrote {out}")
@@ -231,8 +253,10 @@ def write_index_html(all_data: dict, output_dir: Path):
         open_attr = " open" if i == 0 else ""
         charts_html = "\n".join(
             f'      <figure>\n'
-            f'        <img src="{repo}/chart-{scenario}.svg" alt="{scenario} chart" loading="lazy">\n'
-            f'        <figcaption>{scenario.replace("-", " ").title()}</figcaption>\n'
+            f'        <img src="{repo}/{scenario}/chart.svg" alt="{scenario} chart" loading="lazy">\n'
+            f'        <figcaption>{scenario.replace("-", " ").title()} '
+            f'(<a href="{repo}/{scenario}/summary.json">json</a>, '
+            f'<a href="{repo}/{scenario}/summary.md">md</a>)</figcaption>\n'
             f'      </figure>'
             for scenario in sorted(data.keys())
         )
@@ -242,10 +266,6 @@ def write_index_html(all_data: dict, output_dir: Path):
     <div class="repo-body">
       <div class="charts">
 {charts_html}
-      </div>
-      <div class="links">
-        <a href="{repo}/summary.json">summary.json</a>
-        <a href="{repo}/summary.md">summary.md</a>
       </div>
     </div>
   </details>""")
@@ -295,15 +315,13 @@ def main():
 
     for repo, data in all_data.items():
         print(f"\n=== {repo} ===")
-        repo_out = output_dir / repo
-        repo_out.mkdir(parents=True, exist_ok=True)
-
-        write_summary_json(data, repo_out)
-        write_summary_md(repo, data, repo_out)
-
         for scenario, entries in data.items():
+            scenario_out = output_dir / repo / scenario
+            scenario_out.mkdir(parents=True, exist_ok=True)
+            write_summary_json(repo, scenario, entries, scenario_out)
+            write_summary_md(repo, scenario, entries, scenario_out)
             ascii_bar_chart(repo, scenario, entries)
-            write_svg_chart(repo, scenario, entries, repo_out)
+            write_svg_chart(repo, scenario, entries, scenario_out)
 
     output_dir.mkdir(parents=True, exist_ok=True)
     write_index_html(all_data, output_dir)

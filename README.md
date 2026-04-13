@@ -18,7 +18,7 @@ After all tools finish, an `aggregate` job produces a unified comparison.
 
 ## How it works
 
-1. **`benchmarks.yaml`** — single source of truth: which repos to clone, which tools to run, and what commands to execute.
+1. **`benchmarks.yaml`** — single source of truth: which repos to clone, which tools to run, what commands to execute, and the shared hyperfine settings for each benchmark scenario.
 2. **`run_bench.sh`** — bash runner (requires `yq` + `hyperfine`). 
 Clones the target repo, optionally overlays extra build files, runs setup, then benchmarks clean and incremental compilation.
 3. **`aggregate.py`** — aggregates all per-tool hyperfine JSON results into a unified comparison (see [Results](#results)).
@@ -57,15 +57,19 @@ Build files that a repo doesn't ship natively (e.g. a `build.mill` for a Maven-o
 
 Results land in `results/` by default:
 
-```
+```text
 results/
-├── maven-clean.json
-├── maven-incremental.json
-├── gradle-clean.json
-└── ...
+├── java-algorithms/
+│   ├── maven-clean-compile.json
+│   ├── maven-incremental-compile.json
+│   └── ...
+└── scala-algorithms/
+    ├── sbt-clean-compile.json
+    ├── sbt-incremental-compile.json
+    └── ...
 ```
 
-Each file is a standard hyperfine JSON export — use `cat results/maven-clean.json | jq .results[0].mean` to read the mean time in seconds.
+Each file is a standard hyperfine JSON export — use `cat results/java-algorithms/maven-clean-compile.json | jq .results[0].mean` to read the mean time in seconds.
 
 ---
 
@@ -74,16 +78,16 @@ Each file is a standard hyperfine JSON export — use `cat results/maven-clean.j
 Results are published to **GitHub Pages** after each CI run:
 > `https://<your-org>.github.io/jvm-build-tools-bench/`
 
-The page has one collapsible section per repo with SVG bar charts for each scenario.
+The page has one collapsible section per repo with separate SVG charts and report links for each scenario.
 
 You can also download the **`results-aggregated`** artifact from the Actions tab. It contains:
 
 | File | Contents |
 |---|---|
 | `index.html` | Static results page (charts + links) |
-| `<repo>/summary.json` | Mean / stddev / min / max per tool per scenario |
-| `<repo>/summary.md` | Markdown comparison table (one section per scenario) |
-| `<repo>/chart-<scenario>.svg` | Horizontal bar chart per scenario |
+| `<repo>/<scenario>/summary.json` | Mean / stddev / min / max per tool for one scenario |
+| `<repo>/<scenario>/summary.md` | Markdown comparison table for one scenario |
+| `<repo>/<scenario>/chart.svg` | Horizontal bar chart for one scenario |
 
 To run aggregation locally after collecting results:
 
