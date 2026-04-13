@@ -1,0 +1,14 @@
+{
+  "repo": "scala-algorithms",
+  "scenario": "incremental-compile",
+  "entries": [
+    {
+      "tool": "sbt",
+      "mean": 0.15946299,
+      "stddev": 0.021933206000119387,
+      "min": 0.1351452699,
+      "max": 0.2006711489,
+      "median": 0.1536896064
+    }
+  ]
+}
