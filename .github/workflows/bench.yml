@@ -8,7 +8,7 @@ on:
       - benchmarks.yaml
       - run_bench.sh
       - build-files/**
-      - *.py
+      - **/*.py
 
 jobs:
   # ── Step 1: read tool names from benchmarks.yaml and build a matrix ──────
