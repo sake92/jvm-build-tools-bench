@@ -1,8 +1,8 @@
 TOOL_COLORS = {
     "maven": "#1f77b4",
-    "mill": "#ff7f0e",
+    "mill": "#666666",
     "deder": "#2ca02c",
-    "sbt": "#d62728",
+    "sbt": "#01191F",
 }
 
 
