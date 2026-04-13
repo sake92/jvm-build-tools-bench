@@ -18,12 +18,12 @@ After all tools finish, an `aggregate` job produces a unified comparison.
 
 ## How it works
 
-1. **`benchmarks.yaml`** — single source of truth: which repos to clone, which tools to run, what commands to execute, and the shared hyperfine settings for each benchmark scenario.
+1. **`benchmarks.yaml`** — single source of truth: which repos to clone, which repo + build tool benchmarks to run, what commands to execute, and the shared hyperfine settings for each benchmark scenario.
 2. **`run_bench.sh`** — bash runner (requires `yq` + `hyperfine`). 
 Clones the target repo, optionally overlays extra build files, runs setup, then benchmarks clean and incremental compilation.
 3. **`aggregate.py`** — aggregates all per-tool hyperfine JSON results into a unified comparison (see [Results](#results)).
 4. **`.github/workflows/bench.yml`** — CI workflow. 
-The tool list is read dynamically from `benchmarks.yaml` to build a matrix; each tool runs on a **separate fresh runner** for maximum isolation. 
+The benchmark list is read dynamically from `benchmarks.yaml` to build a matrix; each repo + build tool combination runs on a **separate fresh runner** for maximum isolation. 
 An `aggregate` job runs after all tools finish.
 
 Build files that a repo doesn't ship natively (e.g. a `build.mill` for a Maven-only repo) are stored under `build-files/<repo>/<tool>/` and overlaid before benchmarking.
@@ -45,14 +45,14 @@ Build files that a repo doesn't ship natively (e.g. a `build.mill` for a Maven-o
 ## Running locally
 
 ```bash
-# benchmark Maven
-./run_bench.sh --tool maven
+# benchmark Maven on java-algorithms
+./run_bench.sh --benchmark java-algorithms-maven
 
 # benchmark Mill, store results in a custom directory
-./run_bench.sh --tool mill --results-dir /tmp/mill-results
+./run_bench.sh --benchmark java-algorithms-mill --results-dir /tmp/mill-results
 
 # keep cloned repos across runs (speeds up repeated runs)
-./run_bench.sh --tool gradle --repos-dir ~/bench-repos
+./run_bench.sh --benchmark java-algorithms-gradle --repos-dir ~/bench-repos
 ```
 
 Results land in `results/` by default:
@@ -104,7 +104,7 @@ ASCII bar charts are also printed to stdout during aggregation (handy for readin
 
 ## Adding a new tool
 
-1. Add an entry to `benchmarks.yaml` (copy an existing one as a template).
+1. Add an entry to `benchmarks.yaml` with a `repo` and `build_tool_name` (copy an existing one as a template).
 2. If the target repo doesn't have a native build file for this tool, add it under `build-files/<repo>/<tool>/`.
 3. That's it — GitHub Actions will pick it up automatically on the next run.
 

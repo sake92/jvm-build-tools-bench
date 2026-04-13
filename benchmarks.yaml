@@ -11,7 +11,8 @@
 #   incremental_compile.runs   - measured runs for incremental compile benchmark
 #
 # Fields per tool:
-#   repo              - matches a name in `repos`
+#   build_tool_name   - build tool label used in result filenames and overlays
+#   repo              - matches a name in `repos`; combined with build_tool_name to form a unique benchmark id
 #   install           - how to install the tool on a fresh CI runner
 #   setup             - run once before hyperfine (download deps, warm daemon)
 #   compile_clean     - full clean + compile command measured by hyperfine
@@ -42,7 +43,7 @@ repos:
 tools:
   ######### java-algorithms #########
   # ── java-algorithms: Maven ──────────────────────────────────────────────────────────
-  - name: maven
+  - build_tool_name: maven
     repo: java-algorithms
     install: "echo 'Maven is pre-installed on ubuntu-latest'"
     setup: "mvn dependency:resolve -q"
@@ -54,7 +55,7 @@ tools:
     shutdown: ""
 
   # ── java-algorithms: Gradle ─────────────────────────────────────────────────────────
-  #- name: gradle
+  #- build_tool_name: gradle
   #  repo: java-algorithms
   #  install: "echo 'Gradle is pre-installed on ubuntu-latest'"
   #  setup: "gradle compileJava -q"
@@ -67,7 +68,7 @@ tools:
 
   # ── java-algorithms: Mill ───────────────────────────────────────────────────────────
   # build-files/java-algorithms/mill/ is copied over the cloned repo
-  - name: mill
+  - build_tool_name: mill
     repo: java-algorithms
     install: |
       curl -L https://repo1.maven.org/maven2/com/lihaoyi/mill-dist/1.1.2/mill-dist-1.1.2-mill.sh -o mill
@@ -82,7 +83,7 @@ tools:
     shutdown: "mill shutdown || true"
 
   # ── java-algorithms: Deder ───────────────────────────────────────────────────────────
-  - name: deder
+  - build_tool_name: deder
     repo: java-algorithms
     install: "brew install sake92/tap/deder"
     setup: "deder exec -t compile"
@@ -95,7 +96,7 @@ tools:
 
   ######### scala-algorithms #########
   # ── scala-algorithms: sbt ───────────────────────────────────────────────────────────
-  - name: sbt
+  - build_tool_name: sbt
     repo: scala-algorithms
     install: |
       sudo apt-get update
@@ -119,7 +120,7 @@ tools:
     shutdown: "sbt --client shutdown || true"
 
   # ── scala-algorithms: Deder ───────────────────────────────────────────────────────────
-  - name: deder
+  - build_tool_name: deder
     repo: scala-algorithms
     install: "brew install sake92/tap/deder"
     setup: "deder exec -t compile"
@@ -129,7 +130,6 @@ tools:
       - src/main/scala/Sort/BubbleSort.scala
       - src/main/scala/Sort/MergeSort.scala
     shutdown: "deder shutdown || true"
-
 
 
 

@@ -2,7 +2,7 @@
 # run_bench.sh — run JVM build tool benchmarks defined in benchmarks.yaml
 #
 # Usage:
-#   ./run_bench.sh --tool <name> [--results-dir <dir>] [--repos-dir <dir>]
+#   ./run_bench.sh --benchmark <repo>-<build-tool> [--results-dir <dir>] [--repos-dir <dir>]
 #
 # Prerequisites:
 #   - hyperfine  (https://github.com/sharkdp/hyperfine)
@@ -15,21 +15,22 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG="$SCRIPT_DIR/benchmarks.yaml"
 
 # ── defaults ──────────────────────────────────────────────────────────────
-TOOL=""
+BENCHMARK=""
 RESULTS_DIR="$SCRIPT_DIR/results"
 REPOS_DIR="$SCRIPT_DIR/tmp/repos"
 
 # ── argument parsing ───────────────────────────────────────────────────────
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --tool)        TOOL="$2";        shift 2 ;;
+    --benchmark|--tool) BENCHMARK="$2"; shift 2 ;;
     --results-dir) RESULTS_DIR="$2"; shift 2 ;;
-    --repos-dir)   REPOS_DIR="$2";   shift 2 ;;    *) echo "Unknown argument: $1" >&2; exit 1 ;;
+    --repos-dir)   REPOS_DIR="$2";   shift 2 ;;
+    *) echo "Unknown argument: $1" >&2; exit 1 ;;
   esac
 done
 
-if [[ -z "$TOOL" ]]; then
-  echo "Usage: $0 --tool <name> [--results-dir <dir>] [--repos-dir <dir>]" >&2
+if [[ -z "$BENCHMARK" ]]; then
+  echo "Usage: $0 --benchmark <repo>-<build-tool> [--results-dir <dir>] [--repos-dir <dir>]" >&2
   exit 1
 fi
 
@@ -38,26 +39,27 @@ RESULTS_DIR="$(mkdir -p "$RESULTS_DIR" && cd "$RESULTS_DIR" && pwd)"
 REPOS_DIR="$(mkdir -p "$REPOS_DIR" && cd "$REPOS_DIR" && pwd)"
 
 # ── helpers ───────────────────────────────────────────────────────────────
-yq_tool() { yq ".tools[] | select(.name == \"$TOOL\") | $1" "$CONFIG"; }
+yq_benchmark() { yq ".tools[] | select((.repo + \"-\" + .build_tool_name) == \"$BENCHMARK\") | $1" "$CONFIG"; }
 yq_repo() { local repo_name="$1"; yq ".repos[] | select(.name == \"$repo_name\") | $2" "$CONFIG"; }
 yq_global() { yq "$1" "$CONFIG"; }
 
 # Return empty string instead of "null" for optional fields
-yq_opt() { local val; val=$(yq_tool "$1"); [[ "$val" == "null" ]] && echo "" || echo "$val"; }
+yq_opt() { local val; val=$(yq_benchmark "$1"); [[ "$val" == "null" ]] && echo "" || echo "$val"; }
 yq_req() { local val; val=$(yq_global "$1"); [[ "$val" == "null" || -z "$val" ]] && die "Missing required config field: $1" || echo "$val"; }
 
 die() { echo "ERROR: $*" >&2; exit 1; }
 
 # ── read tool config ───────────────────────────────────────────────────────
-REPO_NAME=$(yq_tool ".repo")
-[[ "$REPO_NAME" == "null" || -z "$REPO_NAME" ]] && die "Tool '$TOOL' not found in $CONFIG"
+REPO_NAME=$(yq_benchmark ".repo")
+BUILD_TOOL_NAME=$(yq_benchmark ".build_tool_name")
+[[ "$REPO_NAME" == "null" || -z "$REPO_NAME" || "$BUILD_TOOL_NAME" == "null" || -z "$BUILD_TOOL_NAME" ]] && die "Benchmark '$BENCHMARK' not found in $CONFIG"
 
 REPO_URL=$(yq_repo "$REPO_NAME" ".url")
 REPO_REF=$(yq_repo "$REPO_NAME" ".ref")
 
 SETUP=$(yq_opt ".setup")
-COMPILE_CLEAN=$(yq_tool ".compile_clean")
-COMPILE_INCR=$(yq_tool ".compile_incremental")
+COMPILE_CLEAN=$(yq_benchmark ".compile_clean")
+COMPILE_INCR=$(yq_benchmark ".compile_incremental")
 SHUTDOWN=$(yq_opt ".shutdown")
 
 CLEAN_WARMUP=$(yq_req ".hyperfine.clean_compile.warmup")
@@ -66,10 +68,11 @@ INCR_WARMUP=$(yq_req ".hyperfine.incremental_compile.warmup")
 INCR_RUNS=$(yq_req ".hyperfine.incremental_compile.runs")
 
 # incremental_files as a bash array (yq outputs one per line with -r style)
-mapfile -t INCR_FILES < <(yq ".tools[] | select(.name == \"$TOOL\") | .incremental_files[]" "$CONFIG")
+mapfile -t INCR_FILES < <(yq ".tools[] | select((.repo + \"-\" + .build_tool_name) == \"$BENCHMARK\") | .incremental_files[]" "$CONFIG")
 
 echo "=== JVM Build Tools Bench ==="
-echo "Tool:     $TOOL"
+echo "Benchmark: $BENCHMARK"
+echo "Tool:     $BUILD_TOOL_NAME"
 echo "Repo:     $REPO_NAME ($REPO_URL @ $REPO_REF)"
 echo "Results:  $RESULTS_DIR"
 echo ""
@@ -106,7 +109,7 @@ else
 fi
 
 # ── overlay build files if present (build-files/<repo>/<tool>/) ──────────
-OVERLAY_DIR="$SCRIPT_DIR/build-files/$REPO_NAME/$TOOL"
+OVERLAY_DIR="$SCRIPT_DIR/build-files/$REPO_NAME/$BUILD_TOOL_NAME"
 if [[ -d "$OVERLAY_DIR" ]]; then
   echo ">>> Overlaying build files from $OVERLAY_DIR..."
   cp -r "$OVERLAY_DIR/." "$REPO_DIR/"
@@ -114,8 +117,8 @@ fi
 
 # ── prepare results directory ──────────────────────────────────────────────
 mkdir -p "$RESULTS_DIR/$REPO_NAME"
-CLEAN_JSON="$RESULTS_DIR/$REPO_NAME/${TOOL}-clean-compile.json"
-INCR_JSON="$RESULTS_DIR/$REPO_NAME/${TOOL}-incremental-compile.json"
+CLEAN_JSON="$RESULTS_DIR/$REPO_NAME/${BUILD_TOOL_NAME}-clean-compile.json"
+INCR_JSON="$RESULTS_DIR/$REPO_NAME/${BUILD_TOOL_NAME}-incremental-compile.json"
 
 # ── run setup (dep download / daemon warm-up) ──────────────────────────────
 pushd "$REPO_DIR" > /dev/null
