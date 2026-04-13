@@ -11,3 +11,4 @@ def get_tool_color(tool: str) -> str:
         return TOOL_COLORS[tool]
     except KeyError as exc:
         raise ValueError(f"Unknown build tool '{tool}' has no configured chart color") from exc
+
