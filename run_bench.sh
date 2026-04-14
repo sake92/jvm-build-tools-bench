@@ -60,12 +60,15 @@ REPO_REF=$(yq_repo "$REPO_NAME" ".ref")
 SETUP=$(yq_opt ".setup")
 COMPILE_CLEAN=$(yq_benchmark ".compile_clean")
 COMPILE_INCR=$(yq_benchmark ".compile_incremental")
+TEST_ALL=$(yq_benchmark ".test_all")
 SHUTDOWN=$(yq_opt ".shutdown")
 
 CLEAN_WARMUP=$(yq_req ".hyperfine.clean_compile.warmup")
 CLEAN_RUNS=$(yq_req ".hyperfine.clean_compile.runs")
 INCR_WARMUP=$(yq_req ".hyperfine.incremental_compile.warmup")
 INCR_RUNS=$(yq_req ".hyperfine.incremental_compile.runs")
+TEST_ALL_WARMUP=$(yq_req ".hyperfine.test_all.warmup")
+TEST_ALL_RUNS=$(yq_req ".hyperfine.test_all.runs")
 
 # incremental_files as a bash array (yq outputs one per line with -r style)
 mapfile -t INCR_FILES < <(yq ".tools[] | select((.repo + \"-\" + .build_tool_name) == \"$BENCHMARK\") | .incremental_files[]" "$CONFIG")
@@ -117,8 +120,9 @@ fi
 
 # ── prepare results directory ──────────────────────────────────────────────
 mkdir -p "$RESULTS_DIR/$REPO_NAME"
-CLEAN_JSON="$RESULTS_DIR/$REPO_NAME/${BUILD_TOOL_NAME}-clean-compile.json"
-INCR_JSON="$RESULTS_DIR/$REPO_NAME/${BUILD_TOOL_NAME}-incremental-compile.json"
+CLEAN_COMPILE_JSON="$RESULTS_DIR/$REPO_NAME/${BUILD_TOOL_NAME}-clean-compile.json"
+INCR_COMPILE_JSON="$RESULTS_DIR/$REPO_NAME/${BUILD_TOOL_NAME}-incremental-compile.json"
+TEST_ALL_JSON="$RESULTS_DIR/$REPO_NAME/${BUILD_TOOL_NAME}-test-all.json"
 
 # ── run setup (dep download / daemon warm-up) ──────────────────────────────
 pushd "$REPO_DIR" > /dev/null
@@ -135,7 +139,7 @@ hyperfine \
   --shell bash \
   --warmup "$CLEAN_WARMUP" \
   --runs "$CLEAN_RUNS" \
-  --export-json "$CLEAN_JSON" \
+  --export-json "$CLEAN_COMPILE_JSON" \
   "$COMPILE_CLEAN"
 
 # ── benchmark: incremental compile ───────────────────────────────────────
@@ -150,8 +154,18 @@ hyperfine \
   --shell bash \
   --warmup "$INCR_WARMUP" \
   --runs "$INCR_RUNS" \
-  --export-json "$INCR_JSON" \
+  --export-json "$INCR_COMPILE_JSON" \
   "$COMPILE_INCR"
+
+# ── benchmark: all tests ───────────────────────────────────────
+echo ">>> Benchmarking tests (warmup=$TEST_ALL_WARMUP, runs=$TEST_ALL_RUNS)..."
+hyperfine \
+  --shell bash \
+  --warmup "$TEST_ALL_WARMUP" \
+  --runs "$TEST_ALL_RUNS" \
+  --export-json "$TEST_ALL_JSON" \
+  "$TEST_ALL"
+
 
 popd > /dev/null
 
@@ -167,5 +181,8 @@ fi
 echo ""
 echo "=== Done ==="
 echo "Results written to:"
-echo "  $CLEAN_JSON"
-echo "  $INCR_JSON"
+echo "  $CLEAN_COMPILE_JSON"
+echo "  $INCR_COMPILE_JSON"
+echo "  $TEST_ALL_JSON"
+
+

@@ -9,6 +9,8 @@
 #   clean_compile.runs         - measured runs for clean compile benchmark
 #   incremental_compile.warmup - unmeasured warmup runs before incremental compile benchmark
 #   incremental_compile.runs   - measured runs for incremental compile benchmark
+#   test_all.warmup - unmeasured warmup runs before test benchmark
+#   test_all.runs   - measured runs for test benchmark
 #
 # Fields per tool:
 #   build_tool_name   - build tool label used in result filenames and overlays
@@ -30,7 +32,9 @@ hyperfine:
   incremental_compile:
     warmup: 1
     runs: 10
-
+  test_all:
+    warmup: 1
+    runs: 10
 repos:
   - name: java-algorithms
     url: https://github.com/TheAlgorithms/Java
