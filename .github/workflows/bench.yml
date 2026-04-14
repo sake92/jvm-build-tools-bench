@@ -62,7 +62,8 @@ jobs:
         uses: Homebrew/actions/setup-homebrew@main
       - name: Install build tool
         run: |
-          install_cmd=$(yq ".tools[] | select((.repo + \"-\" + .build_tool_name) == \"${{ matrix.benchmark }}\") | .install" benchmarks.yaml)
+          tool_name=$(yq ".tools[] | select((.repo + \"-\" + .build_tool_name) == \"${{ matrix.benchmark }}\") | .build_tool_name" benchmarks.yaml)
+          install_cmd=$(yq ".build_tools.${tool_name}.install" benchmarks.yaml)
           eval "$install_cmd"
       - name: Run benchmark
         run: |

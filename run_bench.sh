@@ -62,7 +62,7 @@ REPO_REF=$(yq_repo "$REPO_NAME" ".ref")
 SETUP=$(yq_opt ".setup")
 COMPILE_CLEAN=$(yq_benchmark ".compile_clean")
 COMPILE_INCR=$(yq_benchmark ".compile_incremental")
-TEST_ALL=$(yq_benchmark ".test_all")
+TEST_ALL=$(yq_opt ".test_all")
 SHUTDOWN=$(yq_build_tool_opt "shutdown")
 
 CLEAN_WARMUP=$(yq_req ".hyperfine.clean_compile.warmup")
@@ -160,13 +160,15 @@ hyperfine \
   "$COMPILE_INCR"
 
 # ── benchmark: all tests ───────────────────────────────────────
-echo ">>> Benchmarking tests (warmup=$TEST_ALL_WARMUP, runs=$TEST_ALL_RUNS)..."
-hyperfine \
-  --shell bash \
-  --warmup "$TEST_ALL_WARMUP" \
-  --runs "$TEST_ALL_RUNS" \
-  --export-json "$TEST_ALL_JSON" \
-  "$TEST_ALL"
+if [[ -n "$TEST_ALL" ]]; then
+  echo ">>> Benchmarking tests (warmup=$TEST_ALL_WARMUP, runs=$TEST_ALL_RUNS)..."
+  hyperfine \
+    --shell bash \
+    --warmup "$TEST_ALL_WARMUP" \
+    --runs "$TEST_ALL_RUNS" \
+    --export-json "$TEST_ALL_JSON" \
+    "$TEST_ALL"
+fi
 
 
 popd > /dev/null
