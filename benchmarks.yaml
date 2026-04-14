@@ -1,8 +1,9 @@
 # JVM Build Tools Benchmark Configuration
 #
-# hyperfine: global benchmark parameters shared by all tools
-# repos: external repositories to clone and compile
-# tools: one entry per (tool, repo) combination
+# hyperfine:    global benchmark parameters shared by all tools
+# build_tools:  per-tool install and shutdown commands (defined once, shared across all repos)
+# repos:        external repositories to clone and compile
+# tools:        one entry per (tool, repo) combination
 #
 # Fields in `hyperfine`:
 #   clean_compile.warmup       - unmeasured warmup runs before clean compile benchmark
@@ -12,15 +13,17 @@
 #   test_all.warmup - unmeasured warmup runs before test benchmark
 #   test_all.runs   - measured runs for test benchmark
 #
+# Fields in `build_tools.<name>`:
+#   install  - how to install the tool on a fresh CI runner
+#   shutdown - clean up daemons / processes after benchmarking
+#
 # Fields per tool:
-#   build_tool_name   - build tool label used in result filenames and overlays
-#   repo              - matches a name in `repos`; combined with build_tool_name to form a unique benchmark id
-#   install           - how to install the tool on a fresh CI runner
-#   setup             - run once before hyperfine (download deps, warm daemon)
-#   compile_clean     - full clean + compile command measured by hyperfine
+#   build_tool_name     - build tool label used in result filenames and overlays; must match a key in build_tools
+#   repo                - matches a name in `repos`; combined with build_tool_name to form a unique benchmark id
+#   setup               - run once before hyperfine (download deps, warm daemon)
+#   compile_clean       - full clean + compile command measured by hyperfine
 #   compile_incremental - incremental compile command (after touching files)
-#   incremental_files - files to `touch` before the incremental run
-#   shutdown          - clean up daemons / processes after benchmarking
+#   incremental_files   - files to `touch` before the incremental run
 #
 # Build file overlays: if build-files/<repo>/<tool>/ exists in this repo,
 # its contents are automatically copied into the cloned repo before benchmarking.
@@ -35,6 +38,32 @@ hyperfine:
   test_all:
     warmup: 1
     runs: 10
+
+build_tools:
+  maven:
+    install: "echo 'Maven is pre-installed on ubuntu-latest'"
+    shutdown: ""
+  mill:
+    install: |
+      curl -L https://repo1.maven.org/maven2/com/lihaoyi/mill-dist/1.1.2/mill-dist-1.1.2-mill.sh -o mill
+      chmod +x mill
+      sudo mv mill /usr/local/bin/mill
+    shutdown: "mill shutdown || true"
+  deder:
+    install: "brew install sake92/tap/deder"
+    shutdown: "deder shutdown || true"
+  sbt:
+    install: |
+      sudo apt-get update
+      sudo apt-get install apt-transport-https curl gnupg -yqq
+      echo "deb https://repo.scala-sbt.org/scalasbt/debian all main" | sudo tee /etc/apt/sources.list.d/sbt.list
+      echo "deb https://repo.scala-sbt.org/scalasbt/debian /" | sudo tee /etc/apt/sources.list.d/sbt_old.list
+      curl -sL "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x2EE0EA64E40A89B84B2DF73499E82A75642AC823" | sudo -H gpg --no-default-keyring --keyring gnupg-ring:/etc/apt/trusted.gpg.d/scalasbt-release.gpg --import
+      sudo chmod 644 /etc/apt/trusted.gpg.d/scalasbt-release.gpg
+      sudo apt-get update
+      sudo apt-get install sbt -y
+    shutdown: "sbt --client shutdown || true"
+
 repos:
   - name: java-algorithms
     url: https://github.com/TheAlgorithms/Java
@@ -49,14 +78,12 @@ tools:
   # ── java-algorithms: Maven ──────────────────────────────────────────────────────────
   - build_tool_name: maven
     repo: java-algorithms
-    install: "echo 'Maven is pre-installed on ubuntu-latest'"
     setup: "mvn dependency:resolve -q"
     compile_clean: "mvn clean compile -q"
     compile_incremental: "mvn compile -q"
     incremental_files:
       - src/main/java/com/thealgorithms/sorts/BubbleSort.java
       - src/main/java/com/thealgorithms/sorts/MergeSort.java
-    shutdown: ""
 
   # ── java-algorithms: Gradle ─────────────────────────────────────────────────────────
   #- build_tool_name: gradle
@@ -74,43 +101,27 @@ tools:
   # build-files/java-algorithms/mill/ is copied over the cloned repo
   - build_tool_name: mill
     repo: java-algorithms
-    install: |
-      curl -L https://repo1.maven.org/maven2/com/lihaoyi/mill-dist/1.1.2/mill-dist-1.1.2-mill.sh -o mill
-      chmod +x mill
-      sudo mv mill /usr/local/bin/mill
     setup: "mill __.compile"
     compile_clean: "mill clean && mill __.compile"
     compile_incremental: "mill __.compile"
     incremental_files:
       - src/main/java/com/thealgorithms/sorts/BubbleSort.java
       - src/main/java/com/thealgorithms/sorts/MergeSort.java
-    shutdown: "mill shutdown || true"
 
   # ── java-algorithms: Deder ───────────────────────────────────────────────────────────
   - build_tool_name: deder
     repo: java-algorithms
-    install: "brew install sake92/tap/deder"
     setup: "deder exec -t compile"
     compile_clean: "deder clean && deder exec -t compile"
     compile_incremental: "deder exec -t compile"
     incremental_files:
       - src/main/java/com/thealgorithms/sorts/BubbleSort.java
       - src/main/java/com/thealgorithms/sorts/MergeSort.java
-    shutdown: "deder shutdown || true"
 
   ######### scala-algorithms #########
   # ── scala-algorithms: sbt ───────────────────────────────────────────────────────────
   - build_tool_name: sbt
     repo: scala-algorithms
-    install: |
-      sudo apt-get update
-      sudo apt-get install apt-transport-https curl gnupg -yqq
-      echo "deb https://repo.scala-sbt.org/scalasbt/debian all main" | sudo tee /etc/apt/sources.list.d/sbt.list
-      echo "deb https://repo.scala-sbt.org/scalasbt/debian /" | sudo tee /etc/apt/sources.list.d/sbt_old.list
-      curl -sL "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x2EE0EA64E40A89B84B2DF73499E82A75642AC823" | sudo -H gpg --no-default-keyring --keyring gnupg-ring:/etc/apt/trusted.gpg.d/scalasbt-release.gpg --import
-      sudo chmod 644 /etc/apt/trusted.gpg.d/scalasbt-release.gpg
-      sudo apt-get update
-      sudo apt-get install sbt -y
     setup: |
       # scala is old
       sed -i 's/scalaVersion := "2.13.6",/scalaVersion := "2.13.11",/g' build.sbt
@@ -121,19 +132,16 @@ tools:
     incremental_files:
       - src/main/scala/Sort/BubbleSort.scala
       - src/main/scala/Sort/MergeSort.scala
-    shutdown: "sbt --client shutdown || true"
 
   # ── scala-algorithms: Deder ───────────────────────────────────────────────────────────
   - build_tool_name: deder
     repo: scala-algorithms
-    install: "brew install sake92/tap/deder"
     setup: "deder exec -t compile"
     compile_clean: "deder clean && deder exec -t compile"
     compile_incremental: "deder exec -t compile"
     incremental_files:
       - src/main/scala/Sort/BubbleSort.scala
       - src/main/scala/Sort/MergeSort.scala
-    shutdown: "deder shutdown || true"
 
 
 

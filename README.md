@@ -10,6 +10,7 @@ Two scenarios are measured per tool:
 |---|---|
 | **clean compile** | Full rebuild from scratch (`clean` + compile) |
 | **incremental compile** | Touch a set of source files, recompile |
+| **test all** | Run all tests |
 
 Results are exported as hyperfine JSON and uploaded as GitHub Actions artifacts.  
 After all tools finish, an `aggregate` job produces a unified comparison.
@@ -62,6 +63,7 @@ results/
 ├── java-algorithms/
 │   ├── maven-clean-compile.json
 │   ├── maven-incremental-compile.json
+│   ├── maven-test-all.json
 │   └── ...
 └── scala-algorithms/
     ├── sbt-clean-compile.json

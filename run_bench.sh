@@ -42,9 +42,11 @@ REPOS_DIR="$(mkdir -p "$REPOS_DIR" && cd "$REPOS_DIR" && pwd)"
 yq_benchmark() { yq ".tools[] | select((.repo + \"-\" + .build_tool_name) == \"$BENCHMARK\") | $1" "$CONFIG"; }
 yq_repo() { local repo_name="$1"; yq ".repos[] | select(.name == \"$repo_name\") | $2" "$CONFIG"; }
 yq_global() { yq "$1" "$CONFIG"; }
+yq_build_tool() { yq ".build_tools.$BUILD_TOOL_NAME.$1" "$CONFIG"; }
 
 # Return empty string instead of "null" for optional fields
 yq_opt() { local val; val=$(yq_benchmark "$1"); [[ "$val" == "null" ]] && echo "" || echo "$val"; }
+yq_build_tool_opt() { local val; val=$(yq_build_tool "$1"); [[ "$val" == "null" ]] && echo "" || echo "$val"; }
 yq_req() { local val; val=$(yq_global "$1"); [[ "$val" == "null" || -z "$val" ]] && die "Missing required config field: $1" || echo "$val"; }
 
 die() { echo "ERROR: $*" >&2; exit 1; }
@@ -61,7 +63,7 @@ SETUP=$(yq_opt ".setup")
 COMPILE_CLEAN=$(yq_benchmark ".compile_clean")
 COMPILE_INCR=$(yq_benchmark ".compile_incremental")
 TEST_ALL=$(yq_benchmark ".test_all")
-SHUTDOWN=$(yq_opt ".shutdown")
+SHUTDOWN=$(yq_build_tool_opt "shutdown")
 
 CLEAN_WARMUP=$(yq_req ".hyperfine.clean_compile.warmup")
 CLEAN_RUNS=$(yq_req ".hyperfine.clean_compile.runs")
