@@ -84,18 +84,7 @@ tools:
     incremental_files:
       - src/main/java/com/thealgorithms/sorts/BubbleSort.java
       - src/main/java/com/thealgorithms/sorts/MergeSort.java
-
-  # ── java-algorithms: Gradle ─────────────────────────────────────────────────────────
-  #- build_tool_name: gradle
-  #  repo: java-algorithms
-  #  install: "echo 'Gradle is pre-installed on ubuntu-latest'"
-  #  setup: "gradle compileJava -q"
-  #  compile_clean: "gradle clean compileJava -q"
-  #  compile_incremental: "gradle compileJava -q"
-  #  incremental_files:
-  #    - src/main/java/com/thealgorithms/sorts/BubbleSort.java
-  #    - src/main/java/com/thealgorithms/sorts/MergeSort.java
-  #  shutdown: "gradle --stop || true"
+    test_all: "mvn test -q"
 
   # ── java-algorithms: Mill ───────────────────────────────────────────────────────────
   # build-files/java-algorithms/mill/ is copied over the cloned repo
@@ -107,6 +96,7 @@ tools:
     incremental_files:
       - src/main/java/com/thealgorithms/sorts/BubbleSort.java
       - src/main/java/com/thealgorithms/sorts/MergeSort.java
+    test_all: "mill __.test"
 
   # ── java-algorithms: Deder ───────────────────────────────────────────────────────────
   - build_tool_name: deder
@@ -117,6 +107,7 @@ tools:
     incremental_files:
       - src/main/java/com/thealgorithms/sorts/BubbleSort.java
       - src/main/java/com/thealgorithms/sorts/MergeSort.java
+    test_all: "deder exec -t test"
 
   ######### scala-algorithms #########
   # ── scala-algorithms: sbt ───────────────────────────────────────────────────────────
@@ -132,6 +123,7 @@ tools:
     incremental_files:
       - src/main/scala/Sort/BubbleSort.scala
       - src/main/scala/Sort/MergeSort.scala
+    test_all: "sbt --client test"
 
   # ── scala-algorithms: Deder ───────────────────────────────────────────────────────────
   - build_tool_name: deder
@@ -142,7 +134,7 @@ tools:
     incremental_files:
       - src/main/scala/Sort/BubbleSort.scala
       - src/main/scala/Sort/MergeSort.scala
-
+    test_all: "deder exec -t test"
 
 
 
