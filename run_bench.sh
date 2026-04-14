@@ -41,6 +41,7 @@ REPOS_DIR="$(mkdir -p "$REPOS_DIR" && cd "$REPOS_DIR" && pwd)"
 # ── helpers ───────────────────────────────────────────────────────────────
 yq_benchmark() { yq ".tools[] | select((.repo + \"-\" + .build_tool_name) == \"$BENCHMARK\") | $1" "$CONFIG"; }
 yq_repo() { local repo_name="$1"; yq ".repos[] | select(.name == \"$repo_name\") | $2" "$CONFIG"; }
+yq_repo_opt() { local val; val=$(yq_repo "$REPO_NAME" "$1"); [[ "$val" == "null" ]] && echo "" || echo "$val"; }
 yq_global() { yq "$1" "$CONFIG"; }
 yq_build_tool() { yq ".build_tools.$BUILD_TOOL_NAME.$1" "$CONFIG"; }
 
@@ -118,6 +119,15 @@ OVERLAY_DIR="$SCRIPT_DIR/build-files/$REPO_NAME/$BUILD_TOOL_NAME"
 if [[ -d "$OVERLAY_DIR" ]]; then
   echo ">>> Overlaying build files from $OVERLAY_DIR..."
   cp -r "$OVERLAY_DIR/." "$REPO_DIR/"
+fi
+
+# ── repo-level setup (e.g. remove broken test files) ─────────────────────
+REPO_SETUP=$(yq_repo_opt ".setup")
+if [[ -n "$REPO_SETUP" ]]; then
+  echo ">>> Repo setup: $REPO_SETUP"
+  pushd "$REPO_DIR" > /dev/null
+  eval "$REPO_SETUP"
+  popd > /dev/null
 fi
 
 # ── prepare results directory ──────────────────────────────────────────────

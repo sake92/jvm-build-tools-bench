@@ -17,7 +17,11 @@
 #   install  - how to install the tool on a fresh CI runner
 #   shutdown - clean up daemons / processes after benchmarking
 #
-# Fields per tool:
+# Fields per repo:
+#   name    - unique identifier for the repo
+#   url     - git URL to clone
+#   ref     - branch, tag, or commit SHA to checkout
+#   setup   - optional shell command run once after cloning/updating (e.g. remove broken test files)
 #   build_tool_name     - build tool label used in result filenames and overlays; must match a key in build_tools
 #   repo                - matches a name in `repos`; combined with build_tool_name to form a unique benchmark id
 #   setup               - run once before hyperfine (download deps, warm daemon)
@@ -68,6 +72,7 @@ repos:
   - name: java-algorithms
     url: https://github.com/TheAlgorithms/Java
     ref: 49f9e1a5a7c041a6b40db52b089b480e897b89b5  # master @ 2026-04-10
+    setup: "rm -f src/test/java/com/thealgorithms/conversions/AffineConverterTest.java"
 
   - name: scala-algorithms
     url: https://github.com/TheAlgorithms/Scala
