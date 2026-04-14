@@ -36,6 +36,7 @@ from tool_colors import get_tool_color
 SCENARIO_ALIASES = {
     "clean-compile": "clean-compile",
     "incremental-compile": "incremental-compile",
+    "test-all": "test-all",
     "clean": "clean-compile",
     "incremental": "incremental-compile",
 }
