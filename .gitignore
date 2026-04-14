@@ -10,6 +10,7 @@ results/
 # cloned repos and other local working files
 tmp/
 aggregated/
+.worktrees/
 
 # scala
 .bsp/
@@ -18,5 +19,4 @@ aggregated/
 
 # ides
 .vscode/
-
 
