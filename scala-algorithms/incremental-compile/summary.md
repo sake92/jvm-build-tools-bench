@@ -2,5 +2,5 @@
 
 | Tool | Mean | Stddev | Min | Max |
 |------|-----:|-------:|----:|----:|
-| deder | 25.0 ms | ± 2.7 ms | 21.0 ms | 31.4 ms |
-| sbt | 126.4 ms | ± 6.5 ms | 118.8 ms | 139.9 ms |
+| deder | 50.5 ms | ± 5.0 ms | 38.5 ms | 57.8 ms |
+| sbt | 127.9 ms | ± 6.6 ms | 119.0 ms | 137.7 ms |
