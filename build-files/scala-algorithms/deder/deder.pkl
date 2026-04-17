@@ -1,4 +1,4 @@
-amends "https://sake92.github.io/deder/config/v0.3.3/DederProject.pkl"
+amends "https://sake92.github.io/deder/config/early-access/DederProject.pkl"
 
 local const _scalacOptions = new Listing {
   "-encoding"
@@ -75,6 +75,7 @@ local const _rootTest = new ScalaTestModule {
   id = "rootTest"
   root = "."
   scalaVersion = "2.13.11"
+  fork = false
   sources = new Listing {
     "src/test/scala"
   }
