@@ -9,6 +9,7 @@
 #   - yq >= 4    (https://github.com/mikefarah/yq)
 #   - git, java, and the build tool itself
 
+
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
