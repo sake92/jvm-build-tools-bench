@@ -3,9 +3,6 @@ package build
 
 import mill.*
 import mill.javalib.*
-import mill.scalalib.*
-import mill.api.Task.Simple
-import mill.util.JarManifest
 
 object `package` extends MavenModule {
   def mvnDeps = Seq(
@@ -14,7 +11,8 @@ object `package` extends MavenModule {
   )
   object test extends MavenTests, TestModule.Junit5 {
     def mvnDeps = Seq(
-      mvn"org.junit.jupiter:junit-jupiter:5.10.1",
+      mvn"org.junit.jupiter:junit-jupiter:5.14.0",
+      mvn"org.junit.platform:junit-platform-launcher:1.14.0",
       mvn"org.assertj:assertj-core:3.27.6",
       mvn"org.mockito:mockito-core:5.20.0"
     )
