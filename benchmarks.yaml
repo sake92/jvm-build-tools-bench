@@ -89,7 +89,7 @@ tools:
     incremental_files:
       - src/main/java/com/thealgorithms/sorts/BubbleSort.java
       - src/main/java/com/thealgorithms/sorts/MergeSort.java
-    test_all: "mvn test -q"
+    test_all: "mvn test -q -DforkCount=8 -DreuseForks=true"
 
   # ── java-algorithms: Mill ───────────────────────────────────────────────────────────
   # build-files/java-algorithms/mill/ is copied over the cloned repo
