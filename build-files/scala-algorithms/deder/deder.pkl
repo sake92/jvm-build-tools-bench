@@ -76,7 +76,6 @@ local const _rootTest = new ScalaTestModule {
   root = "."
   scalaVersion = "2.13.11"
   fork = false
-  testParallelism = 4
   sources = new Listing {
     "src/test/scala"
   }

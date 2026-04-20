@@ -17,7 +17,6 @@ local const algorithmsModules =
       sources = new Listing {
         "java"
       }
-      maxTestForks = 8
       deps {
         "com.github.sbt.junit:jupiter-interface:0.16.0"
         "org.junit.jupiter:junit-jupiter:5.14.0"
