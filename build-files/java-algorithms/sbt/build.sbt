@@ -11,7 +11,7 @@ lazy val root = (project in file("."))
       // JUnit 5 adapter for sbt — registers the test framework automatically
       "com.github.sbt.junit" % "jupiter-interface" % "0.16.0" % Test,
       "org.junit.jupiter"    % "junit-jupiter"     % "5.14.0" % Test,
-      "org.assertj"          % "assertj-core"      % "3.27.7" % Test,
+      "org.assertj"          % "assertj-core"      % "3.27.6" % Test,
       "org.mockito"          % "mockito-core"      % "5.20.0" % Test,
     ),
     // Fork the JVM for tests — required for JUnit 5 class-loader isolation
