@@ -114,13 +114,25 @@ tools:
       - src/main/java/com/thealgorithms/sorts/MergeSort.java
     test_all: "deder exec -t test"
 
+  # ── java-algorithms: sbt ────────────────────────────────────────────────────────────
+  # build-files/java-algorithms/sbt/ is copied over the cloned repo
+  - build_tool_name: sbt
+    repo: java-algorithms
+    setup: "sbt --client compile"
+    compile_clean: "sbt --client 'clean; test:clean; compile; test:compile'"
+    compile_incremental: "sbt --client compile"
+    incremental_files:
+      - src/main/java/com/thealgorithms/sorts/BubbleSort.java
+      - src/main/java/com/thealgorithms/sorts/MergeSort.java
+    test_all: "sbt --client test"
+
   ######### scala-algorithms #########
   # ── scala-algorithms: sbt ───────────────────────────────────────────────────────────
   - build_tool_name: sbt
     repo: scala-algorithms
     setup: |
       # scala is old
-      sed -i 's/scalaVersion := "2.13.6",/scalaVersion := "2.13.11",/g' build.sbt
+      gsed -i 's/scalaVersion := "2.13.6",/scalaVersion := "2.13.11",/g' build.sbt
       sbt --client compile
     compile_clean: |
       sbt --client 'clean; test:clean; compile; test:compile'
