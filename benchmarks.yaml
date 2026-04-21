@@ -163,7 +163,7 @@ tools:
     incremental_files:
       - src/main/scala/Sort/BubbleSort.scala
       - src/main/scala/Sort/MergeSort.scala
-    test_all: "mill __.test"
+    test_all: "mill __.testLocal"
 
 
 
