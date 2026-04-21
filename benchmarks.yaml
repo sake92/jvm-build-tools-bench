@@ -151,7 +151,7 @@ tools:
     incremental_files:
       - src/main/scala/Sort/BubbleSort.scala
       - src/main/scala/Sort/MergeSort.scala
-    test_all: "deder exec -t test"
+    test_all: "deder exec -t testInMemory"
 
   # ── scala-algorithms: Mill ──────────────────────────────────────────────────────────
   # build-files/scala-algorithms/mill/ is copied over the cloned repo
