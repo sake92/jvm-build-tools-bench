@@ -53,6 +53,15 @@ yq_req() { local val; val=$(yq_global "$1"); [[ "$val" == "null" || -z "$val" ]]
 
 die() { echo "ERROR: $*" >&2; exit 1; }
 
+FAILED_PHASES=()
+run_phase() {
+  local name="$1"; shift
+  if ! "$@"; then
+    echo "WARNING: '$name' failed — continuing with remaining phases..."
+    FAILED_PHASES+=("$name")
+  fi
+}
+
 # ── read tool config ───────────────────────────────────────────────────────
 REPO_NAME=$(yq_benchmark ".repo")
 BUILD_TOOL_NAME=$(yq_benchmark ".build_tool_name")
@@ -148,7 +157,7 @@ fi
 # ── benchmark: clean compile ──────────────────────────────────────────────
 echo ""
 echo ">>> Benchmarking clean compile (warmup=$CLEAN_WARMUP, runs=$CLEAN_RUNS)..."
-hyperfine \
+run_phase "clean compile" hyperfine \
   --shell bash \
   --warmup "$CLEAN_WARMUP" \
   --runs "$CLEAN_RUNS" \
@@ -163,7 +172,7 @@ for f in "${INCR_FILES[@]}"; do
 done
 
 echo ">>> Benchmarking incremental compile (warmup=$INCR_WARMUP, runs=$INCR_RUNS)..."
-hyperfine \
+run_phase "incremental compile" hyperfine \
   --shell bash \
   --warmup "$INCR_WARMUP" \
   --runs "$INCR_RUNS" \
@@ -173,7 +182,7 @@ hyperfine \
 # ── benchmark: all tests ───────────────────────────────────────
 if [[ -n "$TEST_ALL" ]]; then
   echo ">>> Benchmarking tests (warmup=$TEST_ALL_WARMUP, runs=$TEST_ALL_RUNS)..."
-  hyperfine \
+  run_phase "test all" hyperfine \
     --shell bash \
     --warmup "$TEST_ALL_WARMUP" \
     --runs "$TEST_ALL_RUNS" \
@@ -193,11 +202,18 @@ if [[ -n "$SHUTDOWN" ]]; then
   popd > /dev/null
 fi
 
+if [[ ${#FAILED_PHASES[@]} -gt 0 ]]; then
+  echo ""
+  echo "WARNING: The following phases failed: ${FAILED_PHASES[*]}"
+fi
+
 echo ""
 echo "=== Done ==="
 echo "Results written to:"
 echo "  $CLEAN_COMPILE_JSON"
 echo "  $INCR_COMPILE_JSON"
 echo "  $TEST_ALL_JSON"
+
+[[ ${#FAILED_PHASES[@]} -eq 0 ]] || exit 1
 
 
