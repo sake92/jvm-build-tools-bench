@@ -131,8 +131,8 @@ tools:
   - build_tool_name: sbt
     repo: scala-algorithms
     setup: |
-      # scala is old
-      gsed -i 's/scalaVersion := "2.13.6",/scalaVersion := "2.13.11",/g' build.sbt
+      # scala version is old; use gsed on macOS, sed on Linux
+      $(command -v gsed 2>/dev/null || echo sed) -i 's/scalaVersion := "2.13.6",/scalaVersion := "2.13.11",/g' build.sbt
       sbt --client compile
     compile_clean: |
       sbt --client 'clean; test:clean; compile; test:compile'
