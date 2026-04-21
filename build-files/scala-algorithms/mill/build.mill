@@ -1,0 +1,29 @@
+//| mill-version: 1.1.2
+package build
+
+import mill.*
+import mill.scalalib.*
+
+object `package` extends SbtModule {
+  def scalaVersion = "2.13.11"
+
+  def mvnDeps = Seq(
+    mvn"com.beachape::enumeratum:1.7.0",
+    mvn"com.github.pureconfig::pureconfig:0.17.0",
+    mvn"ch.qos.logback:logback-classic:1.2.6",
+  )
+
+  def scalacPluginMvnDeps = Seq(
+    mvn"org.typelevel:::kind-projector:0.13.2",
+    mvn"com.olegpy::better-monadic-for:0.3.1",
+  )
+
+  object test extends SbtModuleTests with TestModule.ScalaTest {
+    def mvnDeps = Seq(
+      mvn"org.scalatest::scalatest:3.2.10",
+      mvn"org.scalatestplus::mockito-3-4:3.2.10.0",
+      mvn"org.scalactic::scalactic:3.2.10",
+      mvn"com.vladsch.flexmark:flexmark-all:0.62.2",
+    )
+  }
+}
