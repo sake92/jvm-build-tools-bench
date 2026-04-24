@@ -2,7 +2,7 @@
 
 > Just a naive mini benchmark!
 
-Benchmarks comparing JVM build tools (Maven, Gradle, Mill, sbt, …) on real-world open-source repositories using [hyperfine](https://github.com/sharkdp/hyperfine).
+Benchmarks comparing JVM build tools (Maven, Gradle, Mill, bleep, sbt, …) on real-world open-source repositories using [hyperfine](https://github.com/sharkdp/hyperfine).
 
 Two scenarios are measured per tool:
 
@@ -39,7 +39,7 @@ Build files that a repo doesn't ship natively (e.g. a `build.mill` for a Maven-o
 | hyperfine | `cargo install hyperfine` or [releases page](https://github.com/sharkdp/hyperfine/releases) |
 | yq ≥ 4 | `sudo snap install yq` or [releases page](https://github.com/mikefarah/yq/releases) |
 | Python 3 + matplotlib | `pip install matplotlib` (only needed for SVG charts) |
-| Build tool | Maven / Gradle / Mill / sbt — see `benchmarks.yaml` for `install` commands |
+| Build tool | Maven / Gradle / Mill / bleep / sbt — see `benchmarks.yaml` for `install` commands |
 
 ---
 

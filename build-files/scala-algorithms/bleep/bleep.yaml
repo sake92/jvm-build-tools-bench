@@ -1,0 +1,31 @@
+$schema: https://raw.githubusercontent.com/oyvindberg/bleep/master/schema.json
+$version: 1.0.0-M9
+templates:
+  scala-jvm:
+    platform:
+      name: jvm
+    scala:
+      compilerPlugins:
+        - org.typelevel:::kind-projector:0.13.2
+        - com.olegpy::better-monadic-for:0.3.1
+      version: 2.13.11
+projects:
+  algorithms:
+    dependencies:
+      - com.beachape::enumeratum:1.7.0
+      - com.github.pureconfig::pureconfig:0.17.0
+      - ch.qos.logback:logback-classic:1.2.6
+    extends: scala-jvm
+    resources: ./src/main/resources
+    sources: ./src/main/scala
+  algorithms-test:
+    dependencies:
+      - org.scalatest::scalatest:3.2.10
+      - org.scalatestplus::mockito-3-4:3.2.10.0
+      - org.scalactic::scalactic:3.2.10
+      - com.vladsch.flexmark:flexmark-all:0.62.2
+    dependsOn: algorithms
+    extends: scala-jvm
+    isTestProject: true
+    resources: ./src/test/resources
+    sources: ./src/test/scala
