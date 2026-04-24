@@ -27,7 +27,7 @@ jobs:
       - name: Build benchmark matrix from benchmarks.yaml
         id: set-matrix
         run: |
-          benchmarks=$(yq '[.tools[] | (.repo + "-" + .build_tool_name)]' benchmarks.yaml -o json | tr -d '\n')
+          benchmarks=$(yq '[.tools[] | (.benchmark_id // (.repo + "-" + .build_tool_name))]' benchmarks.yaml -o json | tr -d '\n')
           echo "matrix={\"benchmark\":$benchmarks}" >> "$GITHUB_OUTPUT"
 
   # ── Step 2: one fresh runner per tool ─────────────────────────────────────
@@ -65,7 +65,7 @@ jobs:
         uses: Homebrew/actions/setup-homebrew@main
       - name: Install build tool
         run: |
-          tool_name=$(yq ".tools[] | select((.repo + \"-\" + .build_tool_name) == \"${{ matrix.benchmark }}\") | .build_tool_name" benchmarks.yaml)
+          tool_name=$(yq ".tools[] | select((.benchmark_id // (.repo + \"-\" + .build_tool_name)) == \"${{ matrix.benchmark }}\") | .build_tool_name" benchmarks.yaml)
           install_cmd=$(yq ".build_tools.${tool_name}.install" benchmarks.yaml)
           eval "$install_cmd"
       - name: Run benchmark

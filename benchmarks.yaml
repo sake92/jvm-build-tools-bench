@@ -3,7 +3,7 @@
 # hyperfine:    global benchmark parameters shared by all tools
 # build_tools:  per-tool install and shutdown commands (defined once, shared across all repos)
 # repos:        external repositories to clone and compile
-# tools:        one entry per (tool, repo) combination
+# tools:        benchmark entries, optionally with multiple labeled variants per repo/tool
 #
 # Fields in `hyperfine`:
 #   clean_compile.warmup       - unmeasured warmup runs before clean compile benchmark
@@ -22,8 +22,10 @@
 #   url     - git URL to clone
 #   ref     - branch, tag, or commit SHA to checkout
 #   setup   - optional shell command run once after cloning/updating (e.g. remove broken test files)
-#   build_tool_name     - build tool label used in result filenames and overlays; must match a key in build_tools
-#   repo                - matches a name in `repos`; combined with build_tool_name to form a unique benchmark id
+#   build_tool_name     - build tool used for installs/overlays; must match a key in build_tools
+#   benchmark_id        - optional unique benchmark id passed to run_bench.sh; defaults to <repo>-<build_tool_name>
+#   result_label        - optional label used in result filenames/charts; defaults to build_tool_name
+#   repo                - matches a name in `repos`
 #   setup               - run once before hyperfine (download deps, warm daemon)
 #   compile_clean       - full clean + compile command measured by hyperfine
 #   compile_incremental - incremental compile command (after touching files)
@@ -44,9 +46,6 @@ hyperfine:
     runs: 10
 
 build_tools:
-  gradle:
-    install: "echo 'Gradle wrapper is provided by benchmarked repos'"
-    shutdown: "./gradlew --stop || true"
   maven:
     install: "echo 'Maven is pre-installed on ubuntu-latest'"
     shutdown: ""
@@ -72,9 +71,9 @@ build_tools:
     shutdown: "sbt --client shutdown || true"
 
 repos:
-  - name: mockito-core
-    url: https://github.com/mockito/mockito
-    ref: 32f06eb839d23958dc7a83c830e8a627e02e0dd0  # main @ 2026-04-24
+  - name: slf4j
+    url: https://github.com/qos-ch/slf4j
+    ref: d2073bece8310017914e1ff65d7107b2d4869c7d  # master @ 2025-11-24
 
   - name: java-algorithms
     url: https://github.com/TheAlgorithms/Java
@@ -86,17 +85,45 @@ repos:
     ref: de555349d5effb87962d3116eb08c9f374065112  # master @ 2026-04-10
 
 tools:
-  ######### mockito-core #########
-  # ── mockito-core: Gradle ───────────────────────────────────────────────────────────────
-  - build_tool_name: gradle
-    repo: mockito-core
-    setup: "chmod +x gradlew && ./gradlew -q --no-build-cache mockito-core:compileJava"
-    compile_clean: "./gradlew -q --no-build-cache mockito-core:clean mockito-core:compileJava"
-    compile_incremental: "./gradlew -q --no-build-cache mockito-core:compileJava"
+  ######### slf4j #########
+  # ── slf4j: Maven (leaf/api module) ─────────────────────────────────────────────────────
+  - benchmark_id: slf4j-maven-api
+    build_tool_name: maven
+    result_label: maven-api
+    repo: slf4j
+    setup: "mvn -pl slf4j-api -am install -DskipTests -q"
+    compile_clean: "mvn -pl slf4j-api -am clean compile -DskipTests -q"
+    compile_incremental: "mvn -pl slf4j-api -am compile -DskipTests -q"
     incremental_files:
-      - mockito-core/src/main/java/org/mockito/Mockito.java
-      - mockito-core/src/main/java/org/mockito/internal/creation/bytebuddy/ByteBuddyMockMaker.java
-    test_all: "./gradlew -q --no-build-cache mockito-core:test"
+      - slf4j-api/src/main/java/org/slf4j/Logger.java
+      - slf4j-api/src/main/java/org/slf4j/LoggerFactory.java
+    test_all: "mvn -pl slf4j-api -am test -q"
+
+  # ── slf4j: Maven (middle/simple module) ─────────────────────────────────────────────────
+  - benchmark_id: slf4j-maven-simple
+    build_tool_name: maven
+    result_label: maven-simple
+    repo: slf4j
+    setup: "mvn -pl slf4j-simple -am install -DskipTests -q"
+    compile_clean: "mvn -pl slf4j-simple -am clean compile -DskipTests -q"
+    compile_incremental: "mvn -pl slf4j-simple -am compile -DskipTests -q"
+    incremental_files:
+      - slf4j-simple/src/main/java/org/slf4j/simple/SimpleLogger.java
+      - slf4j-simple/src/main/java/org/slf4j/simple/SimpleLoggerConfiguration.java
+    test_all: "mvn -pl slf4j-simple -am test -q"
+
+  # ── slf4j: Maven (full reactor) ─────────────────────────────────────────────────────────
+  - benchmark_id: slf4j-maven-reactor
+    build_tool_name: maven
+    result_label: maven-reactor
+    repo: slf4j
+    setup: "mvn install -DskipTests -q"
+    compile_clean: "mvn clean compile -DskipTests -q"
+    compile_incremental: "mvn compile -DskipTests -q"
+    incremental_files:
+      - slf4j-api/src/main/java/org/slf4j/Logger.java
+      - slf4j-simple/src/main/java/org/slf4j/simple/SimpleLogger.java
+    test_all: "mvn test -q"
 
   ######### java-algorithms #########
   # ── java-algorithms: Maven ──────────────────────────────────────────────────────────
@@ -183,8 +210,6 @@ tools:
       - src/main/scala/Sort/BubbleSort.scala
       - src/main/scala/Sort/MergeSort.scala
     test_all: "mill __.testLocal"
-
-
 
 
 

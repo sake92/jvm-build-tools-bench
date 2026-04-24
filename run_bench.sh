@@ -2,7 +2,7 @@
 # run_bench.sh — run JVM build tool benchmarks defined in benchmarks.yaml
 #
 # Usage:
-#   ./run_bench.sh --benchmark <repo>-<build-tool> [--results-dir <dir>] [--repos-dir <dir>]
+#   ./run_bench.sh --benchmark <benchmark-id> [--results-dir <dir>] [--repos-dir <dir>]
 #
 # Prerequisites:
 #   - hyperfine  (https://github.com/sharkdp/hyperfine)
@@ -31,7 +31,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [[ -z "$BENCHMARK" ]]; then
-  echo "Usage: $0 --benchmark <repo>-<build-tool> [--results-dir <dir>] [--repos-dir <dir>]" >&2
+  echo "Usage: $0 --benchmark <benchmark-id> [--results-dir <dir>] [--repos-dir <dir>]" >&2
   exit 1
 fi
 
@@ -40,7 +40,7 @@ RESULTS_DIR="$(mkdir -p "$RESULTS_DIR" && cd "$RESULTS_DIR" && pwd)"
 REPOS_DIR="$(mkdir -p "$REPOS_DIR" && cd "$REPOS_DIR" && pwd)"
 
 # ── helpers ───────────────────────────────────────────────────────────────
-yq_benchmark() { yq ".tools[] | select((.repo + \"-\" + .build_tool_name) == \"$BENCHMARK\") | $1" "$CONFIG"; }
+yq_benchmark() { yq ".tools[] | select((.benchmark_id // (.repo + \"-\" + .build_tool_name)) == \"$BENCHMARK\") | $1" "$CONFIG"; }
 yq_repo() { local repo_name="$1"; yq ".repos[] | select(.name == \"$repo_name\") | $2" "$CONFIG"; }
 yq_repo_opt() { local val; val=$(yq_repo "$REPO_NAME" "$1"); [[ "$val" == "null" ]] && echo "" || echo "$val"; }
 yq_global() { yq "$1" "$CONFIG"; }
@@ -66,6 +66,7 @@ run_phase() {
 REPO_NAME=$(yq_benchmark ".repo")
 BUILD_TOOL_NAME=$(yq_benchmark ".build_tool_name")
 [[ "$REPO_NAME" == "null" || -z "$REPO_NAME" || "$BUILD_TOOL_NAME" == "null" || -z "$BUILD_TOOL_NAME" ]] && die "Benchmark '$BENCHMARK' not found in $CONFIG"
+RESULT_LABEL=$(yq_benchmark ".result_label // .build_tool_name")
 
 REPO_URL=$(yq_repo "$REPO_NAME" ".url")
 REPO_REF=$(yq_repo "$REPO_NAME" ".ref")
@@ -84,11 +85,12 @@ TEST_ALL_WARMUP=$(yq_req ".hyperfine.test_all.warmup")
 TEST_ALL_RUNS=$(yq_req ".hyperfine.test_all.runs")
 
 # incremental_files as a bash array (yq outputs one per line with -r style)
-mapfile -t INCR_FILES < <(yq ".tools[] | select((.repo + \"-\" + .build_tool_name) == \"$BENCHMARK\") | .incremental_files[]" "$CONFIG")
+mapfile -t INCR_FILES < <(yq ".tools[] | select((.benchmark_id // (.repo + \"-\" + .build_tool_name)) == \"$BENCHMARK\") | .incremental_files[]?" "$CONFIG")
 
 echo "=== JVM Build Tools Bench ==="
 echo "Benchmark: $BENCHMARK"
 echo "Tool:     $BUILD_TOOL_NAME"
+echo "Label:    $RESULT_LABEL"
 echo "Repo:     $REPO_NAME ($REPO_URL @ $REPO_REF)"
 echo "Results:  $RESULTS_DIR"
 echo ""
@@ -142,9 +144,9 @@ fi
 
 # ── prepare results directory ──────────────────────────────────────────────
 mkdir -p "$RESULTS_DIR/$REPO_NAME"
-CLEAN_COMPILE_JSON="$RESULTS_DIR/$REPO_NAME/${BUILD_TOOL_NAME}-clean-compile.json"
-INCR_COMPILE_JSON="$RESULTS_DIR/$REPO_NAME/${BUILD_TOOL_NAME}-incremental-compile.json"
-TEST_ALL_JSON="$RESULTS_DIR/$REPO_NAME/${BUILD_TOOL_NAME}-test-all.json"
+CLEAN_COMPILE_JSON="$RESULTS_DIR/$REPO_NAME/${RESULT_LABEL}-clean-compile.json"
+INCR_COMPILE_JSON="$RESULTS_DIR/$REPO_NAME/${RESULT_LABEL}-incremental-compile.json"
+TEST_ALL_JSON="$RESULTS_DIR/$REPO_NAME/${RESULT_LABEL}-test-all.json"
 
 # ── run setup (dep download / daemon warm-up) ──────────────────────────────
 pushd "$REPO_DIR" > /dev/null
@@ -215,5 +217,4 @@ echo "  $INCR_COMPILE_JSON"
 echo "  $TEST_ALL_JSON"
 
 [[ ${#FAILED_PHASES[@]} -eq 0 ]] || exit 1
-
 
