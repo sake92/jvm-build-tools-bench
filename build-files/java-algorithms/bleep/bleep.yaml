@@ -1,0 +1,23 @@
+$schema: https://raw.githubusercontent.com/oyvindberg/bleep/master/schema.json
+$version: 1.0.0-M9
+projects:
+  algorithms:
+    dependencies:
+      - org.apache.commons:commons-lang3:3.20.0
+      - org.apache.commons:commons-collections4:4.5.0
+    platform:
+      name: jvm
+    resources: ./src/main/resources
+    sources: ./src/main/java
+  algorithms-test:
+    dependencies:
+      - org.junit.jupiter:junit-jupiter:5.14.0
+      - org.junit.platform:junit-platform-launcher:1.14.0
+      - org.assertj:assertj-core:3.27.6
+      - org.mockito:mockito-core:5.20.0
+    dependsOn: algorithms
+    isTestProject: true
+    platform:
+      name: jvm
+    resources: ./src/test/resources
+    sources: ./src/test/java

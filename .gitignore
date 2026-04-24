@@ -16,7 +16,7 @@ aggregated/
 .bsp/
 .metals/
 .scala-build/
+__pycache__/
 
 # ides
 .vscode/
-
