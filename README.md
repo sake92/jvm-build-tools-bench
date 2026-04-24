@@ -53,7 +53,7 @@ Build files that a repo doesn't ship natively (e.g. a `build.mill` for a Maven-o
 ./run_bench.sh --benchmark java-algorithms-mill --results-dir /tmp/mill-results
 
 # keep cloned repos across runs (speeds up repeated runs)
-./run_bench.sh --benchmark java-algorithms-gradle --repos-dir ~/bench-repos
+./run_bench.sh --benchmark mockito-core-gradle --repos-dir ~/bench-repos
 ```
 
 Results land in `results/` by default:
@@ -117,5 +117,6 @@ ASCII bar charts are also printed to stdout during aggregation (handy for readin
 
 | Repo | URL |
 |---|---|
+| mockito/mockito (`mockito-core` module) | https://github.com/mockito/mockito |
 | TheAlgorithms/Java | https://github.com/TheAlgorithms/Java |
 | TheAlgorithms/Scala | https://github.com/TheAlgorithms/Scala |

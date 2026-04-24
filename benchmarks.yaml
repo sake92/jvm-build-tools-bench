@@ -44,6 +44,9 @@ hyperfine:
     runs: 10
 
 build_tools:
+  gradle:
+    install: "echo 'Gradle wrapper is provided by benchmarked repos'"
+    shutdown: "./gradlew --stop || true"
   maven:
     install: "echo 'Maven is pre-installed on ubuntu-latest'"
     shutdown: ""
@@ -69,6 +72,10 @@ build_tools:
     shutdown: "sbt --client shutdown || true"
 
 repos:
+  - name: mockito-core
+    url: https://github.com/mockito/mockito
+    ref: 32f06eb839d23958dc7a83c830e8a627e02e0dd0  # main @ 2026-04-24
+
   - name: java-algorithms
     url: https://github.com/TheAlgorithms/Java
     ref: 49f9e1a5a7c041a6b40db52b089b480e897b89b5  # master @ 2026-04-10
@@ -79,6 +86,18 @@ repos:
     ref: de555349d5effb87962d3116eb08c9f374065112  # master @ 2026-04-10
 
 tools:
+  ######### mockito-core #########
+  # ── mockito-core: Gradle ───────────────────────────────────────────────────────────────
+  - build_tool_name: gradle
+    repo: mockito-core
+    setup: "chmod +x gradlew && ./gradlew -q --no-build-cache mockito-core:compileJava"
+    compile_clean: "./gradlew -q --no-build-cache mockito-core:clean mockito-core:compileJava"
+    compile_incremental: "./gradlew -q --no-build-cache mockito-core:compileJava"
+    incremental_files:
+      - mockito-core/src/main/java/org/mockito/Mockito.java
+      - mockito-core/src/main/java/org/mockito/internal/creation/bytebuddy/ByteBuddyMockMaker.java
+    test_all: "./gradlew -q --no-build-cache mockito-core:test"
+
   ######### java-algorithms #########
   # ── java-algorithms: Maven ──────────────────────────────────────────────────────────
   - build_tool_name: maven
@@ -164,7 +183,6 @@ tools:
       - src/main/scala/Sort/BubbleSort.scala
       - src/main/scala/Sort/MergeSort.scala
     test_all: "mill __.testLocal"
-
 
 
 
