@@ -2,7 +2,8 @@
 
 | Tool | Mean | Stddev | Min | Max |
 |------|-----:|-------:|----:|----:|
-| sbt | 126.7 ms | ± 4.0 ms | 121.1 ms | 132.7 ms |
-| deder | 176.5 ms | ± 14.0 ms | 158.8 ms | 204.5 ms |
-| mill | 200.3 ms | ± 25.0 ms | 168.2 ms | 239.0 ms |
-| maven | 6196.2 ms | ± 293.8 ms | 5813.3 ms | 6555.4 ms |
+| bleep | 49.1 ms | ± 2.8 ms | 43.4 ms | 52.6 ms |
+| sbt | 121.6 ms | ± 3.2 ms | 115.3 ms | 125.7 ms |
+| deder | 188.4 ms | ± 10.4 ms | 176.0 ms | 207.4 ms |
+| mill | 206.2 ms | ± 33.2 ms | 123.6 ms | 228.5 ms |
+| maven | 6345.3 ms | ± 290.6 ms | 5931.6 ms | 6718.0 ms |
