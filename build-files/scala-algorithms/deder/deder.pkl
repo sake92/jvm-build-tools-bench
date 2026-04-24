@@ -75,7 +75,6 @@ local const _rootTest = new ScalaTestModule {
   id = "rootTest"
   root = "."
   scalaVersion = "2.13.11"
-  fork = false
   sources = new Listing {
     "src/test/scala"
   }
