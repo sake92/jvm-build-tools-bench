@@ -139,7 +139,7 @@ tools:
   - build_tool_name: bleep
     repo: java-algorithms
     setup: "bleep compile algorithms-test"
-    compile_clean: "bleep clean && bleep compile algorithms"
+    compile_clean: "bleep clean algorithms && bleep compile algorithms"
     compile_incremental: "bleep compile algorithms"
     incremental_files:
       - src/main/java/com/thealgorithms/sorts/BubbleSort.java
@@ -190,7 +190,7 @@ tools:
   - build_tool_name: bleep
     repo: scala-algorithms
     setup: "bleep compile algorithms-test"
-    compile_clean: "bleep clean && bleep compile algorithms"
+    compile_clean: "bleep clean algorithms && bleep compile algorithms"
     compile_incremental: "bleep compile algorithms"
     incremental_files:
       - src/main/scala/Sort/BubbleSort.scala
@@ -208,7 +208,6 @@ tools:
       - src/main/scala/Sort/BubbleSort.scala
       - src/main/scala/Sort/MergeSort.scala
     test_all: "mill __.testLocal"
-
 
 
 
