@@ -30,7 +30,7 @@ jobs:
           benchmarks=$(yq '[.tools[] | (.benchmark_id // (.repo + "-" + .build_tool_name))]' benchmarks.yaml -o json | tr -d '\n')
           echo "matrix={\"benchmark\":$benchmarks}" >> "$GITHUB_OUTPUT"
 
-  # ── Step 2: one fresh runner per tool ─────────────────────────────────────
+  # ── Step 2: one fresh runner per benchmark entry ──────────────────────────
   bench:
     needs: setup
     runs-on: ubuntu-latest

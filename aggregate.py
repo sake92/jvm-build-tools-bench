@@ -5,13 +5,14 @@ aggregate.py — aggregate hyperfine benchmark results for jvm-build-tools-bench
 Expected input layout (produced by run_bench.sh):
   <results-dir>/
     <repo>/
-      <tool>-<scenario>.json   (hyperfine JSON export)
+      <tool>-<scenario>.json
+      <tool>-<scenario>-<variant>.json   (hyperfine JSON export)
 
 Repos and tools are discovered dynamically from the directory structure and
 filenames. Scenario names are matched against a small canonical set so
 multi-word names like `clean-compile` stay stable.
 
-Outputs (written to --output-dir/<repo>/<scenario>/):
+Outputs (written to --output-dir/<repo>/<scenario>/[<variant>/]):
   summary.json  structured data: mean/stddev/min/max per tool for one scenario
   summary.md    markdown comparison table for one scenario
   chart.svg     horizontal bar chart for one scenario (requires matplotlib)
@@ -27,6 +28,7 @@ Usage:
 import argparse
 import datetime
 import json
+import re
 import sys
 from collections import defaultdict
 from pathlib import Path
@@ -40,6 +42,9 @@ SCENARIO_ALIASES = {
     "clean": "clean-compile",
     "incremental": "incremental-compile",
 }
+SCENARIO_PATTERN = re.compile(
+    r"^(?P<tool>.+?)-(?P<scenario>clean-compile|incremental-compile|test-all|clean|incremental)(?:-(?P<variant>.+))?$"
+)
 
 
 # ── CLI ──────────────────────────────────────────────────────────────────────
@@ -47,7 +52,7 @@ SCENARIO_ALIASES = {
 def parse_args():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--results-dir", required=True,
-                   help="Directory with <repo>/<tool>-<scenario>.json files")
+                   help="Directory with <repo>/<tool>-<scenario>[-<variant>].json files")
     p.add_argument("--output-dir", default="aggregated",
                    help="Where to write output files (default: aggregated/)")
     return p.parse_args()
@@ -55,26 +60,31 @@ def parse_args():
 
 # ── Data loading ──────────────────────────────────────────────────────────────
 
-def parse_result_stem(stem: str) -> tuple[str, str] | None:
-    for suffix, scenario in sorted(
-        SCENARIO_ALIASES.items(), key=lambda entry: len(entry[0]), reverse=True
-    ):
-        needle = f"-{suffix}"
-        if stem.endswith(needle):
-            tool = stem[: -len(needle)]
-            if tool:
-                return tool, scenario
-    return None
+def parse_result_stem(stem: str) -> tuple[str, str, str | None] | None:
+    match = SCENARIO_PATTERN.match(stem)
+    if not match:
+        return None
 
-def load_results(results_dir: Path) -> dict[str, dict[str, list[dict]]]:
+    tool = match.group("tool")
+    scenario = SCENARIO_ALIASES[match.group("scenario")]
+    variant = match.group("variant")
+    if not tool:
+        return None
+    return tool, scenario, variant
+
+
+def load_results(results_dir: Path) -> dict[str, dict[str, dict[str | None, list[dict]]]]:
     """
-    Walk results_dir and parse every <repo>/<tool>-<scenario>.json.
-    Returns { repo: { scenario: [ {tool, mean, stddev, min, max, median}, ... ] } }
-    sorted by mean within each scenario.
+    Walk results_dir and parse every <repo>/<tool>-<scenario>[-<variant>].json.
+    Returns:
+      { repo: { scenario: { variant: [ {tool, mean, stddev, min, max, median}, ... ] } } }
+    sorted by mean within each scenario/variant group.
     Repo is the immediate parent directory name of each JSON file.
     """
-    # { repo: { scenario: { tool: entry } } }
-    by_repo: dict[str, dict[str, dict[str, dict]]] = defaultdict(lambda: defaultdict(dict))
+    # { repo: { scenario: { variant: { tool: entry } } } }
+    by_repo: dict[str, dict[str, dict[str | None, dict[str, dict]]]] = defaultdict(
+        lambda: defaultdict(lambda: defaultdict(dict))
+    )
 
     for path in sorted(results_dir.rglob("*.json")):
         repo = path.parent.name   # immediate parent dir = repo name
@@ -85,7 +95,7 @@ def load_results(results_dir: Path) -> dict[str, dict[str, list[dict]]]:
             print(f"  Skipping {path} (unknown scenario suffix)", file=sys.stderr)
             continue
 
-        tool, scenario = parsed
+        tool, scenario, variant = parsed
         get_tool_color(tool)
 
         try:
@@ -100,7 +110,7 @@ def load_results(results_dir: Path) -> dict[str, dict[str, list[dict]]]:
             continue
 
         r = results[0]
-        by_repo[repo][scenario][tool] = {
+        by_repo[repo][scenario][variant][tool] = {
             "tool":   tool,
             "mean":   r.get("mean", 0.0),
             "stddev": r.get("stddev", 0.0),
@@ -109,11 +119,16 @@ def load_results(results_dir: Path) -> dict[str, dict[str, list[dict]]]:
             "median": r.get("median", r.get("mean", 0.0)),
         }
 
-    # Sort each scenario's entries by mean (fastest first)
+    # Sort each scenario/variant's entries by mean (fastest first)
     return {
         repo: {
-            scenario: sorted(entries.values(), key=lambda e: e["mean"])
-            for scenario, entries in sorted(scenarios.items())
+            scenario: {
+                variant: sorted(entries.values(), key=lambda e: e["mean"])
+                for variant, entries in sorted(
+                    variants.items(), key=lambda entry: (entry[0] is not None, entry[0] or "")
+                )
+            }
+            for scenario, variants in sorted(scenarios.items())
         }
         for repo, scenarios in sorted(by_repo.items())
     }
@@ -121,11 +136,17 @@ def load_results(results_dir: Path) -> dict[str, dict[str, list[dict]]]:
 
 # ── JSON summary ──────────────────────────────────────────────────────────────
 
-def write_summary_json(repo: str, scenario: str, entries: list[dict], output_dir: Path):
+def scenario_display_name(scenario: str, variant: str | None = None) -> str:
+    label = scenario.replace("-", " ").title()
+    return f"{label} — {variant}" if variant else label
+
+
+def write_summary_json(repo: str, scenario: str, variant: str | None, entries: list[dict], output_dir: Path):
     out = output_dir / "summary.json"
     out.write_text(json.dumps({
         "repo": repo,
         "scenario": scenario,
+        "variant": variant,
         "entries": entries,
     }, indent=2))
     print(f"  Wrote {out}")
@@ -136,8 +157,8 @@ def write_summary_json(repo: str, scenario: str, entries: list[dict], output_dir
 def fmt_ms(seconds: float) -> str:
     return f"{seconds * 1000:.1f} ms"
 
-def write_summary_md(repo: str, scenario: str, entries: list[dict], output_dir: Path):
-    lines = [f"# JVM Build Tools Benchmark — {repo} — {scenario.replace('-', ' ').title()}\n"]
+def write_summary_md(repo: str, scenario: str, variant: str | None, entries: list[dict], output_dir: Path):
+    lines = [f"# JVM Build Tools Benchmark — {repo} — {scenario_display_name(scenario, variant)}\n"]
     lines.append("| Tool | Mean | Stddev | Min | Max |")
     lines.append("|------|-----:|-------:|----:|----:|")
     for e in entries:
@@ -160,14 +181,14 @@ def write_summary_md(repo: str, scenario: str, entries: list[dict], output_dir: 
 BAR_WIDTH = 40
 BAR_CHAR = "█"
 
-def ascii_bar_chart(repo: str, scenario: str, entries: list[dict]):
+def ascii_bar_chart(repo: str, scenario: str, variant: str | None, entries: list[dict]):
     if not entries:
         return
 
     max_mean = max(e["mean"] for e in entries)
     max_tool_len = max(len(e["tool"]) for e in entries)
 
-    print(f"\n  [{repo}] {scenario} (mean time, lower is better)")
+    print(f"\n  [{repo}] {scenario_display_name(scenario, variant)} (mean time, lower is better)")
     for e in entries:
         bar_len = int(round((e["mean"] / max_mean) * BAR_WIDTH)) if max_mean > 0 else 0
         bar = BAR_CHAR * bar_len
@@ -179,13 +200,13 @@ def ascii_bar_chart(repo: str, scenario: str, entries: list[dict]):
 
 # ── SVG / matplotlib chart ────────────────────────────────────────────────────
 
-def write_svg_chart(repo: str, scenario: str, entries: list[dict], output_dir: Path):
+def write_svg_chart(repo: str, scenario: str, variant: str | None, entries: list[dict], output_dir: Path):
     try:
         import matplotlib
         matplotlib.use("Agg")
         import matplotlib.pyplot as plt
     except ImportError:
-        print(f"  matplotlib not available — skipping SVG chart for {scenario}", file=sys.stderr)
+        print(f"  matplotlib not available — skipping SVG chart for {scenario_display_name(scenario, variant)}", file=sys.stderr)
         return
 
     tools = list(reversed([e["tool"] for e in entries]))
@@ -214,7 +235,7 @@ def write_svg_chart(repo: str, scenario: str, entries: list[dict], output_dir: P
         )
 
     ax.set_xlabel("Mean time (ms) — lower is better")
-    ax.set_title(f"{repo}: {scenario.replace('-', ' ').title()}")
+    ax.set_title(f"{repo}: {scenario_display_name(scenario, variant)}")
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
     ax.set_xlim(0, max(means) * 1.2)
@@ -253,15 +274,21 @@ def write_index_html(all_data: dict, output_dir: Path):
 
     for i, (repo, data) in enumerate(sorted(all_data.items())):
         open_attr = " open" if i == 0 else ""
-        charts_html = "\n".join(
-            f'      <figure>\n'
-            f'        <img src="{repo}/{scenario}/chart.svg" alt="{scenario} chart" loading="lazy">\n'
-            f'        <figcaption>{scenario.replace("-", " ").title()} '
-            f'(<a href="{repo}/{scenario}/summary.json">json</a>, '
-            f'<a href="{repo}/{scenario}/summary.md">md</a>)</figcaption>\n'
-            f'      </figure>'
-            for scenario in sorted(data.keys())
-        )
+        chart_blocks = []
+        for scenario, variants in sorted(data.items()):
+            for variant, entries in sorted(
+                variants.items(), key=lambda entry: (entry[0] is not None, entry[0] or "")
+            ):
+                rel_dir = f"{repo}/{scenario}" + (f"/{variant}" if variant else "")
+                chart_blocks.append(
+                    f'      <figure>\n'
+                    f'        <img src="{rel_dir}/chart.svg" alt="{scenario_display_name(scenario, variant)} chart" loading="lazy">\n'
+                    f'        <figcaption>{scenario_display_name(scenario, variant)} '
+                    f'(<a href="{rel_dir}/summary.json">json</a>, '
+                    f'<a href="{rel_dir}/summary.md">md</a>)</figcaption>\n'
+                    f'      </figure>'
+                )
+        charts_html = "\n".join(chart_blocks)
         sections.append(f"""\
   <details{open_attr}>
     <summary>{repo}</summary>
@@ -284,7 +311,7 @@ def write_index_html(all_data: dict, output_dir: Path):
 <body>
   <h1>JVM Build Tools Benchmark</h1>
   <p>Compilation time comparison across build tools on real-world repos.
-     Each chart shows mean time (lower is better).</p>
+     Each chart shows mean time (lower is better) for one scenario or named variant.</p>
 
 {"".join(chr(10) + s for s in sections)}
 
@@ -321,13 +348,16 @@ def main():
 
     for repo, data in all_data.items():
         print(f"\n=== {repo} ===")
-        for scenario, entries in data.items():
-            scenario_out = output_dir / repo / scenario
-            scenario_out.mkdir(parents=True, exist_ok=True)
-            write_summary_json(repo, scenario, entries, scenario_out)
-            write_summary_md(repo, scenario, entries, scenario_out)
-            ascii_bar_chart(repo, scenario, entries)
-            write_svg_chart(repo, scenario, entries, scenario_out)
+        for scenario, variants in data.items():
+            for variant, entries in variants.items():
+                scenario_out = output_dir / repo / scenario
+                if variant:
+                    scenario_out /= variant
+                scenario_out.mkdir(parents=True, exist_ok=True)
+                write_summary_json(repo, scenario, variant, entries, scenario_out)
+                write_summary_md(repo, scenario, variant, entries, scenario_out)
+                ascii_bar_chart(repo, scenario, variant, entries)
+                write_svg_chart(repo, scenario, variant, entries, scenario_out)
 
     output_dir.mkdir(parents=True, exist_ok=True)
     write_index_html(all_data, output_dir)

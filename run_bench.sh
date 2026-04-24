@@ -62,6 +62,20 @@ run_phase() {
   fi
 }
 
+run_setup_cmd() {
+  local label="$1"
+  local cmd="$2"
+  if [[ -n "$cmd" ]]; then
+    echo ">>> $label: $cmd"
+    eval "$cmd"
+  fi
+}
+
+variant_suffix() {
+  local variant="$1"
+  [[ -n "$variant" ]] && echo "-$variant" || echo ""
+}
+
 # ── read tool config ───────────────────────────────────────────────────────
 REPO_NAME=$(yq_benchmark ".repo")
 BUILD_TOOL_NAME=$(yq_benchmark ".build_tool_name")
@@ -83,6 +97,9 @@ INCR_WARMUP=$(yq_req ".hyperfine.incremental_compile.warmup")
 INCR_RUNS=$(yq_req ".hyperfine.incremental_compile.runs")
 TEST_ALL_WARMUP=$(yq_req ".hyperfine.test_all.warmup")
 TEST_ALL_RUNS=$(yq_req ".hyperfine.test_all.runs")
+
+mapfile -t INCR_VARIANTS < <(yq ".tools[] | select((.benchmark_id // (.repo + \"-\" + .build_tool_name)) == \"$BENCHMARK\") | .incremental_variants | keys | .[]?" "$CONFIG")
+mapfile -t TEST_VARIANTS < <(yq ".tools[] | select((.benchmark_id // (.repo + \"-\" + .build_tool_name)) == \"$BENCHMARK\") | .test_variants | keys | .[]?" "$CONFIG")
 
 # incremental_files as a bash array (yq outputs one per line with -r style)
 mapfile -t INCR_FILES < <(yq ".tools[] | select((.benchmark_id // (.repo + \"-\" + .build_tool_name)) == \"$BENCHMARK\") | .incremental_files[]?" "$CONFIG")
@@ -145,15 +162,13 @@ fi
 # ── prepare results directory ──────────────────────────────────────────────
 mkdir -p "$RESULTS_DIR/$REPO_NAME"
 CLEAN_COMPILE_JSON="$RESULTS_DIR/$REPO_NAME/${RESULT_LABEL}-clean-compile.json"
-INCR_COMPILE_JSON="$RESULTS_DIR/$REPO_NAME/${RESULT_LABEL}-incremental-compile.json"
-TEST_ALL_JSON="$RESULTS_DIR/$REPO_NAME/${RESULT_LABEL}-test-all.json"
+RESULT_FILES=("$CLEAN_COMPILE_JSON")
 
 # ── run setup (dep download / daemon warm-up) ──────────────────────────────
 pushd "$REPO_DIR" > /dev/null
 
 if [[ -n "$SETUP" ]]; then
-  echo ">>> Setup: $SETUP"
-  eval "$SETUP"
+  run_setup_cmd "Setup" "$SETUP"
 fi
 
 # ── benchmark: clean compile ──────────────────────────────────────────────
@@ -167,29 +182,83 @@ run_phase "clean compile" hyperfine \
   "$COMPILE_CLEAN"
 
 # ── benchmark: incremental compile ───────────────────────────────────────
-echo ""
-echo ">>> Touching ${#INCR_FILES[@]} file(s) for incremental run..."
-for f in "${INCR_FILES[@]}"; do
-  touch "$REPO_DIR/$f"
-done
+run_incremental_variant() {
+  local variant="$1"
+  local cmd="$2"
+  local setup_cmd="$3"
+  local export_json="$4"
+  shift 4
+  local files=("$@")
+  local label_suffix=""
 
-echo ">>> Benchmarking incremental compile (warmup=$INCR_WARMUP, runs=$INCR_RUNS)..."
-run_phase "incremental compile" hyperfine \
-  --shell bash \
-  --warmup "$INCR_WARMUP" \
-  --runs "$INCR_RUNS" \
-  --export-json "$INCR_COMPILE_JSON" \
-  "$COMPILE_INCR"
+  [[ -n "$variant" ]] && label_suffix=" [$variant]"
+
+  echo ""
+  run_setup_cmd "Incremental setup$label_suffix" "$setup_cmd"
+  echo ">>> Touching ${#files[@]} file(s) for incremental run$label_suffix..."
+  for f in "${files[@]}"; do
+    touch "$REPO_DIR/$f"
+  done
+
+  echo ">>> Benchmarking incremental compile$label_suffix (warmup=$INCR_WARMUP, runs=$INCR_RUNS)..."
+  run_phase "incremental compile$label_suffix" hyperfine \
+    --shell bash \
+    --warmup "$INCR_WARMUP" \
+    --runs "$INCR_RUNS" \
+    --export-json "$export_json" \
+    "$cmd"
+  RESULT_FILES+=("$export_json")
+}
+
+if [[ ${#INCR_VARIANTS[@]} -gt 0 ]]; then
+  for variant in "${INCR_VARIANTS[@]}"; do
+    INCR_CMD=$(yq_benchmark ".incremental_variants.\"$variant\".command")
+    INCR_SETUP=$(yq_opt ".incremental_variants.\"$variant\".setup")
+    mapfile -t variant_files < <(yq ".tools[] | select((.benchmark_id // (.repo + \"-\" + .build_tool_name)) == \"$BENCHMARK\") | .incremental_variants.\"$variant\".incremental_files[]?" "$CONFIG")
+    [[ "$INCR_CMD" == "null" || -z "$INCR_CMD" ]] && die "Missing incremental command for variant '$variant'"
+    run_incremental_variant "$variant" "$INCR_CMD" "$INCR_SETUP" \
+      "$RESULTS_DIR/$REPO_NAME/${RESULT_LABEL}-incremental-compile$(variant_suffix "$variant").json" \
+      "${variant_files[@]}"
+  done
+elif [[ "$COMPILE_INCR" != "null" && -n "$COMPILE_INCR" ]]; then
+  run_incremental_variant "" "$COMPILE_INCR" "" \
+    "$RESULTS_DIR/$REPO_NAME/${RESULT_LABEL}-incremental-compile.json" \
+    "${INCR_FILES[@]}"
+fi
 
 # ── benchmark: all tests ───────────────────────────────────────
-if [[ -n "$TEST_ALL" ]]; then
-  echo ">>> Benchmarking tests (warmup=$TEST_ALL_WARMUP, runs=$TEST_ALL_RUNS)..."
-  run_phase "test all" hyperfine \
+run_test_variant() {
+  local variant="$1"
+  local cmd="$2"
+  local setup_cmd="$3"
+  local export_json="$4"
+  local label_suffix=""
+
+  [[ -n "$variant" ]] && label_suffix=" [$variant]"
+
+  echo ""
+  run_setup_cmd "Test setup$label_suffix" "$setup_cmd"
+  echo ">>> Benchmarking tests$label_suffix (warmup=$TEST_ALL_WARMUP, runs=$TEST_ALL_RUNS)..."
+  run_phase "test all$label_suffix" hyperfine \
     --shell bash \
     --warmup "$TEST_ALL_WARMUP" \
     --runs "$TEST_ALL_RUNS" \
-    --export-json "$TEST_ALL_JSON" \
-    "$TEST_ALL"
+    --export-json "$export_json" \
+    "$cmd"
+  RESULT_FILES+=("$export_json")
+}
+
+if [[ ${#TEST_VARIANTS[@]} -gt 0 ]]; then
+  for variant in "${TEST_VARIANTS[@]}"; do
+    TEST_CMD=$(yq_benchmark ".test_variants.\"$variant\".command")
+    TEST_SETUP=$(yq_opt ".test_variants.\"$variant\".setup")
+    [[ "$TEST_CMD" == "null" || -z "$TEST_CMD" ]] && die "Missing test command for variant '$variant'"
+    run_test_variant "$variant" "$TEST_CMD" "$TEST_SETUP" \
+      "$RESULTS_DIR/$REPO_NAME/${RESULT_LABEL}-test-all$(variant_suffix "$variant").json"
+  done
+elif [[ -n "$TEST_ALL" ]]; then
+  run_test_variant "" "$TEST_ALL" "" \
+    "$RESULTS_DIR/$REPO_NAME/${RESULT_LABEL}-test-all.json"
 fi
 
 
@@ -212,9 +281,8 @@ fi
 echo ""
 echo "=== Done ==="
 echo "Results written to:"
-echo "  $CLEAN_COMPILE_JSON"
-echo "  $INCR_COMPILE_JSON"
-echo "  $TEST_ALL_JSON"
+for result_file in "${RESULT_FILES[@]}"; do
+  echo "  $result_file"
+done
 
 [[ ${#FAILED_PHASES[@]} -eq 0 ]] || exit 1
-

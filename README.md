@@ -9,8 +9,8 @@ Three scenarios are measured per benchmark entry:
 | Scenario | Description |
 |---|---|
 | **clean compile** | Full rebuild from scratch (`clean` + compile) |
-| **incremental compile** | Touch a set of source files, recompile |
-| **test all** | Run all tests |
+| **incremental compile** | Touch a set of source files, recompile; may have multiple named variants |
+| **test all** | Run tests; may have multiple named variants |
 
 Results are exported as hyperfine JSON and uploaded as GitHub Actions artifacts.  
 After all tools finish, an `aggregate` job produces a unified comparison.
@@ -21,10 +21,10 @@ After all tools finish, an `aggregate` job produces a unified comparison.
 
 1. **`benchmarks.yaml`** — single source of truth: which repos to clone, which repo + build tool benchmarks to run, what commands to execute, and the shared hyperfine settings for each benchmark scenario.
 2. **`run_bench.sh`** — bash runner (requires `yq` + `hyperfine`).
-Clones the target repo, optionally overlays extra build files, runs setup, then benchmarks clean and incremental compilation.
+Clones the target repo, optionally overlays extra build files, runs setup, then benchmarks clean compile plus any configured incremental/test variants.
 3. **`aggregate.py`** — aggregates all per-tool hyperfine JSON results into a unified comparison (see [Results](#results)).
 4. **`.github/workflows/bench.yml`** — CI workflow.
-The benchmark list is read dynamically from `benchmarks.yaml` to build a matrix; each benchmark entry runs on a **separate fresh runner** for maximum isolation.
+The benchmark list is read dynamically from `benchmarks.yaml` to build a matrix; each benchmark entry runs on a **separate fresh runner** for maximum isolation, even if that entry emits multiple scenario variants.
 An `aggregate` job runs after all tools finish.
 
 Build files that a repo doesn't ship natively (e.g. a `build.mill` for a Maven-only repo) are stored under `build-files/<repo>/<tool>/` and overlaid before benchmarking.
@@ -53,7 +53,7 @@ Build files that a repo doesn't ship natively (e.g. a `build.mill` for a Maven-o
 ./run_bench.sh --benchmark java-algorithms-mill --results-dir /tmp/mill-results
 
 # keep cloned repos across runs (speeds up repeated runs)
-./run_bench.sh --benchmark slf4j-maven-simple --repos-dir ~/bench-repos
+./run_bench.sh --benchmark slf4j-maven --repos-dir ~/bench-repos
 ```
 
 Results land in `results/` by default:
@@ -64,6 +64,13 @@ results/
 │   ├── maven-clean-compile.json
 │   ├── maven-incremental-compile.json
 │   ├── maven-test-all.json
+│   └── ...
+├── slf4j/
+│   ├── maven-clean-compile.json
+│   ├── maven-incremental-compile-api.json
+│   ├── maven-incremental-compile-simple.json
+│   ├── maven-incremental-compile-reactor.json
+│   ├── maven-test-all-api.json
 │   └── ...
 └── scala-algorithms/
     ├── sbt-clean-compile.json
@@ -80,16 +87,16 @@ Each file is a standard hyperfine JSON export — use `cat results/java-algorith
 Results are published to **GitHub Pages** after each CI run:
 > `https://<your-org>.github.io/jvm-build-tools-bench/`
 
-The page has one collapsible section per repo with separate SVG charts and report links for each scenario.
+The page has one collapsible section per repo with separate SVG charts and report links for each scenario or named scenario variant.
 
 You can also download the **`results-aggregated`** artifact from the Actions tab. It contains:
 
 | File | Contents |
 |---|---|
 | `index.html` | Static results page (charts + links) |
-| `<repo>/<scenario>/summary.json` | Mean / stddev / min / max per tool for one scenario |
-| `<repo>/<scenario>/summary.md` | Markdown comparison table for one scenario |
-| `<repo>/<scenario>/chart.svg` | Horizontal bar chart for one scenario |
+| `<repo>/<scenario>/summary.json` or `<repo>/<scenario>/<variant>/summary.json` | Mean / stddev / min / max per tool for one scenario or variant |
+| `<repo>/<scenario>/summary.md` or `<repo>/<scenario>/<variant>/summary.md` | Markdown comparison table for one scenario or variant |
+| `<repo>/<scenario>/chart.svg` or `<repo>/<scenario>/<variant>/chart.svg` | Horizontal bar chart for one scenario or variant |
 
 To run aggregation locally after collecting results:
 
@@ -106,7 +113,7 @@ ASCII bar charts are also printed to stdout during aggregation (handy for readin
 
 ## Adding a new tool
 
-1. Add an entry to `benchmarks.yaml` with a `repo` and `build_tool_name` (optionally also `benchmark_id` / `result_label` when one repo+tool needs multiple benchmark variants).
+1. Add an entry to `benchmarks.yaml` with a `repo` and `build_tool_name`. Use `incremental_variants` / `test_variants` when one repo+tool needs multiple named measurements within the same benchmark entry.
 2. If the target repo doesn't have a native build file for this tool, add it under `build-files/<repo>/<tool>/`.
 3. Add the tool's chart color in `tool_colors.py` so aggregated SVGs stay consistent.
 4. That's it — GitHub Actions will pick it up automatically on the next run.
