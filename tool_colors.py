@@ -4,6 +4,7 @@ TOOL_COLORS = {
     "deder": "#2ca02c",
     "bleep": "#ff6b35",
     "sbt": "#01191F",
+    "sbt2": "#d62728",
 }
 
 

@@ -87,6 +87,17 @@ build_tools:
       sudo apt-get update
       sudo apt-get install sbt -y
     shutdown: "sbt --client shutdown || true"
+  sbt2:
+    install: |
+      sudo apt-get update
+      sudo apt-get install apt-transport-https curl gnupg -yqq
+      echo "deb https://repo.scala-sbt.org/scalasbt/debian all main" | sudo tee /etc/apt/sources.list.d/sbt.list
+      echo "deb https://repo.scala-sbt.org/scalasbt/debian /" | sudo tee /etc/apt/sources.list.d/sbt_old.list
+      curl -sL "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x2EE0EA64E40A89B84B2DF73499E82A75642AC823" | sudo -H gpg --no-default-keyring --keyring gnupg-ring:/etc/apt/trusted.gpg.d/scalasbt-release.gpg --import
+      sudo chmod 644 /etc/apt/trusted.gpg.d/scalasbt-release.gpg
+      sudo apt-get update
+      sudo apt-get install sbt -y
+    shutdown: "sbt --client shutdown || true"
 
 repos:
   - name: java-algorithms
@@ -158,9 +169,37 @@ tools:
       - src/main/java/com/thealgorithms/sorts/MergeSort.java
     test_all: "sbt --client test"
 
+  # ── java-algorithms: sbt2 ───────────────────────────────────────────────────────────
+  # build-files/java-algorithms/sbt2/ is copied over the cloned repo (sbt 2.0.0-RC12)
+  - build_tool_name: sbt2
+    repo: java-algorithms
+    setup: "sbt --client compile"
+    compile_clean: "sbt --client 'clean; test:clean; compile; test:compile'"
+    compile_incremental: "sbt --client compile"
+    incremental_files:
+      - src/main/java/com/thealgorithms/sorts/BubbleSort.java
+      - src/main/java/com/thealgorithms/sorts/MergeSort.java
+    test_all: "sbt --client test"
+
   ######### scala-algorithms #########
   # ── scala-algorithms: sbt ───────────────────────────────────────────────────────────
   - build_tool_name: sbt
+    repo: scala-algorithms
+    setup: |
+      # scala version is old; use gsed on macOS, sed on Linux
+      $(command -v gsed 2>/dev/null || echo sed) -i 's/scalaVersion := "2.13.6",/scalaVersion := "2.13.11",/g' build.sbt
+      sbt --client compile
+    compile_clean: |
+      sbt --client 'clean; test:clean; compile; test:compile'
+    compile_incremental: "sbt --client compile"
+    incremental_files:
+      - src/main/scala/Sort/BubbleSort.scala
+      - src/main/scala/Sort/MergeSort.scala
+    test_all: "sbt --client test"
+
+  # ── scala-algorithms: sbt2 ──────────────────────────────────────────────────────────
+  # build-files/scala-algorithms/sbt2/ is copied over the cloned repo (sbt 2.0.0-RC12)
+  - build_tool_name: sbt2
     repo: scala-algorithms
     setup: |
       # scala version is old; use gsed on macOS, sed on Linux
