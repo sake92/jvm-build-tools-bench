@@ -65,7 +65,7 @@ jobs:
         uses: Homebrew/actions/setup-homebrew@main
       - name: Install build tool
         run: |
-          scala-cli run run_bench.scala -- --install-cmd "${{ matrix.benchmark }}"
+          scala-cli run run_bench.scala -- --install-cmd --benchmark "${{ matrix.benchmark }}"
       - name: Run benchmark
         run: |
           scala-cli run run_bench.scala -- \
