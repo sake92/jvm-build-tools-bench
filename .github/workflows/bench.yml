@@ -1,6 +1,7 @@
 name: JVM Build Tools Benchmark
 
 on:
+  pull_request:
   workflow_dispatch:
   push:
     branches: [main]
