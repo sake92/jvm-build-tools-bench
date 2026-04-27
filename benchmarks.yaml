@@ -174,7 +174,7 @@ tools:
   - build_tool_name: sbt2
     repo: java-algorithms
     setup: "sbt --client compile"
-    compile_clean: "sbt --client 'clean; test:clean; compile; test:compile'"
+    compile_clean: "sbt --client 'clean; Test/clean; compile; Test/compile'"
     compile_incremental: "sbt --client compile"
     incremental_files:
       - src/main/java/com/thealgorithms/sorts/BubbleSort.java
@@ -206,7 +206,7 @@ tools:
       $(command -v gsed 2>/dev/null || echo sed) -i 's/scalaVersion := "2.13.6",/scalaVersion := "2.13.11",/g' build.sbt
       sbt --client compile
     compile_clean: |
-      sbt --client 'clean; test:clean; compile; test:compile'
+      sbt --client 'clean; Test/clean; compile; Test/compile'
     compile_incremental: "sbt --client compile"
     incremental_files:
       - src/main/scala/Sort/BubbleSort.scala
