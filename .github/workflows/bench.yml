@@ -115,7 +115,7 @@ jobs:
   deploy-pages:
     needs: aggregate
     runs-on: ubuntu-latest
-    if: always()
+    if: always() && github.ref == 'refs/heads/main'
     permissions:
       contents: write
     steps:
