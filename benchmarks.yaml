@@ -145,17 +145,19 @@ tools:
       - src/main/java/com/thealgorithms/sorts/MergeSort.java
     test_all: "deder exec -t test"
 
+  # temp removed because it doesnt actually clean the cache
+  # bloop files are stored somewhere globally ???
   # ── java-algorithms: Bleep ───────────────────────────────────────────────────────────
   # build-files/java-algorithms/bleep/ is copied over the cloned repo
-  - build_tool_name: bleep
-    repo: java-algorithms
-    setup: "bleep compile algorithms-test"
-    compile_clean: "bleep clean algorithms && bleep compile algorithms"
-    compile_incremental: "bleep compile algorithms"
-    incremental_files:
-      - src/main/java/com/thealgorithms/sorts/BubbleSort.java
-      - src/main/java/com/thealgorithms/sorts/MergeSort.java
-    test_all: "bleep test algorithms-test"
+  #- build_tool_name: bleep
+  #  repo: java-algorithms
+  #  setup: "bleep compile algorithms-test"
+  #  compile_clean: "bleep clean && bleep compile algorithms"
+  #  compile_incremental: "bleep compile algorithms"
+  #  incremental_files:
+  #    - src/main/java/com/thealgorithms/sorts/BubbleSort.java
+  #    - src/main/java/com/thealgorithms/sorts/MergeSort.java
+  #  test_all: "bleep test algorithms-test"
 
   # ── java-algorithms: sbt ────────────────────────────────────────────────────────────
   # build-files/java-algorithms/sbt/ is copied over the cloned repo
@@ -226,15 +228,15 @@ tools:
 
   # ── scala-algorithms: Bleep ──────────────────────────────────────────────────────────
   # build-files/scala-algorithms/bleep/ is copied over the cloned repo
-  - build_tool_name: bleep
-    repo: scala-algorithms
-    setup: "bleep compile algorithms-test"
-    compile_clean: "bleep clean algorithms && bleep compile algorithms"
-    compile_incremental: "bleep compile algorithms"
-    incremental_files:
-      - src/main/scala/Sort/BubbleSort.scala
-      - src/main/scala/Sort/MergeSort.scala
-    test_all: "bleep test algorithms-test"
+  #- build_tool_name: bleep
+  #  repo: scala-algorithms
+  #  setup: "bleep compile algorithms-test"
+  #  compile_clean: "bleep clean && bleep compile algorithms"
+  #  compile_incremental: "bleep compile algorithms"
+  #  incremental_files:
+  #    - src/main/scala/Sort/BubbleSort.scala
+  #    - src/main/scala/Sort/MergeSort.scala
+  #  test_all: "bleep test algorithms-test"
 
   # ── scala-algorithms: Mill ──────────────────────────────────────────────────────────
   # build-files/scala-algorithms/mill/ is copied over the cloned repo
