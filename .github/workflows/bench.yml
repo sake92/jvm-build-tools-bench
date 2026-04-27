@@ -7,9 +7,11 @@ on:
     branches: [main]
     paths:
       - benchmarks.yaml
-      - run_bench.sh
+      - run_bench.scala
+      - bench.scala
+      - aggregate.scala
       - build-files/**
-      - '**/*.py'
+      - .github/workflows/bench.yml
 
 jobs:
   # ── Step 1: read tool names from benchmarks.yaml and build a matrix ──────
@@ -19,16 +21,15 @@ jobs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
       - uses: actions/checkout@v4
-      - name: Install yq
-        run: |
-          YQ_VERSION=v4.44.1
-          sudo wget -qO /usr/local/bin/yq \
-            "https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_amd64"
-          sudo chmod +x /usr/local/bin/yq
+      - uses: coursier/cache-action@v7
+      - name: Install scala-cli
+        uses: VirtusLab/scala-cli-setup@v1
+        with:
+          jvm: temurin:21
       - name: Build benchmark matrix from benchmarks.yaml
         id: set-matrix
         run: |
-          benchmarks=$(yq '[.tools[] | (.repo + "-" + .build_tool_name)]' benchmarks.yaml -o json | tr -d '\n')
+          benchmarks=$(scala-cli run run_bench.scala -- --list-benchmarks)
           echo "matrix={\"benchmark\":$benchmarks}" >> "$GITHUB_OUTPUT"
 
   # ── Step 2: one fresh runner per tool ─────────────────────────────────────
@@ -48,12 +49,10 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
-      - name: Install yq
-        run: |
-          YQ_VERSION=v4.44.1
-          sudo wget -qO /usr/local/bin/yq \
-            "https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_amd64"
-          sudo chmod +x /usr/local/bin/yq
+      - name: Install scala-cli
+        uses: VirtusLab/scala-cli-setup@v1
+        with:
+          jvm: temurin:21
       - name: Install hyperfine
         run: |
           HYPERFINE_VERSION=v1.18.0
@@ -66,13 +65,10 @@ jobs:
         uses: Homebrew/actions/setup-homebrew@main
       - name: Install build tool
         run: |
-          tool_name=$(yq ".tools[] | select((.repo + \"-\" + .build_tool_name) == \"${{ matrix.benchmark }}\") | .build_tool_name" benchmarks.yaml)
-          install_cmd=$(yq ".build_tools.${tool_name}.install" benchmarks.yaml)
-          eval "$install_cmd"
+          scala-cli run run_bench.scala -- --install-cmd "${{ matrix.benchmark }}"
       - name: Run benchmark
         run: |
-          chmod +x run_bench.sh
-          ./run_bench.sh \
+          scala-cli run run_bench.scala -- \
             --benchmark "${{ matrix.benchmark }}" \
             --results-dir results/ \
             --repos-dir "${{ runner.temp }}/bench-repos"
@@ -91,17 +87,20 @@ jobs:
     if: always()   # run even if some bench jobs failed
     steps:
       - uses: actions/checkout@v4
+      - uses: coursier/cache-action@v7
+      - name: Install scala-cli
+        uses: VirtusLab/scala-cli-setup@v1
+        with:
+          jvm: temurin:21
       - name: Download all benchmark artifacts
         uses: actions/download-artifact@v4
         with:
           pattern: results-*
           path: all-results/
           merge-multiple: false
-      - name: Install matplotlib
-        run: pip install --quiet matplotlib
       - name: Aggregate results
         run: |
-          python aggregate.py \
+          scala-cli run aggregate.scala -- \
             --results-dir all-results/ \
             --output-dir aggregated/
       - name: Upload aggregated results
