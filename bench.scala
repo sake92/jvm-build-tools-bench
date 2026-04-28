@@ -1,6 +1,6 @@
 //> using scala 3.3
 //> using dep org.virtuslab::scala-yaml:0.3.1
-//> using dep com.lihaoyi::os-lib:0.11.8
+//> using dep com.lihaoyi::os-lib:0.11.9-M7
 //> using dep com.lihaoyi::mainargs:0.7.8
 //> using dep com.lihaoyi::upickle:4.4.3
 //> using dep org.jfree:jfreechart:1.5.6
@@ -198,11 +198,7 @@ def overlayBuildFiles(scriptDir: os.Path, repoName: String, toolName: String, ta
     println(s">>> Overlaying build files from $overlayDir...")
     os.list(overlayDir).foreach { src =>
       val dest = targetDir / src.last
-      if os.isDir(src) then
-        os.copy.over(src, dest)
-      else
-        os.copy.over(src, dest)
-        os.perms.set(dest, os.perms(src))
+      os.copy(src, dest, mergeFolders = true, replaceExisting = true)
     }
 
 // ── Result parsing ──────────────────────────────────────────────────────────
