@@ -148,22 +148,33 @@ object Hyperfine:
     warmup: Int,
     runs: Int,
     outputJson: os.Path,
-    workDir: os.Path
+    workDir: os.Path,
+    timeoutMs: Long = 30 * 60 * 1000 // 30 minutes per scenario
   ): HyperfineResult =
     os.makeDir.all(outputJson / os.up)
     os.write.over(outputJson, "{}")
 
-    println(s">>> Running hyperfine (warmup=$warmup, runs=$runs): $command")
-    val result = os.proc(
-      "hyperfine",
-      "--shell", "bash",
-      "--warmup", warmup.toString,
-      "--runs", runs.toString,
-      "--export-json", outputJson.toString,
-      command
-    ).call(cwd = workDir, check = false, stdout = os.Inherit, stderr = os.Inherit)
+    println(s">>> Running hyperfine (warmup=$warmup, runs=$runs, timeout=${timeoutMs/60000}m): $command")
+    
+    def cleanupStub(): Unit =
+      try os.remove(outputJson) catch case _ => ()
+
+    val result = try
+      os.proc(
+        "hyperfine",
+        "--shell", "bash",
+        "--warmup", warmup.toString,
+        "--runs", runs.toString,
+        "--export-json", outputJson.toString,
+        command
+      ).call(cwd = workDir, check = false, stdout = os.Inherit, stderr = os.Inherit, timeout = timeoutMs)
+    catch
+      case e: Exception =>
+        cleanupStub()
+        throw new RuntimeException(s"hyperfine aborted: $command — ${e.getMessage}")
 
     if result.exitCode != 0 then
+      cleanupStub()
       throw new RuntimeException(s"hyperfine failed with exit code ${result.exitCode}")
 
     val jsonContent = os.read(outputJson)
