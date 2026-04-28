@@ -12,7 +12,9 @@ case class Aggregate(
   @arg(name = "results-dir", doc = "Directory with <repo>/<tool>-<scenario>.json files")
   resultsDir: String,
   @arg(name = "output-dir", doc = "Where to write aggregated outputs")
-  outputDir: String = "aggregated"
+  outputDir: String = "aggregated",
+  @arg(name = "benchmarks-yaml", doc = "Path to benchmarks.yaml to discover valid benchmark types")
+  benchmarksYaml: String = "benchmarks.yaml"
 )
 
 object Aggregate:
@@ -26,12 +28,20 @@ object Aggregate:
     val resultsPath = os.Path(config.resultsDir, os.pwd)
     val outputPath = os.Path(config.outputDir, os.pwd)
 
+    val benchmarksYamlPath = os.Path(config.benchmarksYaml, os.pwd)
+    if !os.exists(benchmarksYamlPath) then
+      System.err.println(s"Error: benchmarks.yaml not found at $benchmarksYamlPath")
+      sys.exit(1)
+    val benchConfig = Config.load(benchmarksYamlPath)
+    val validTypes = benchConfig.hyperfine.benchmark_types.keySet
+    println(s"Valid benchmark types: ${validTypes.toSeq.sorted.mkString(", ")}")
+
     if !os.exists(resultsPath) then
       System.err.println(s"Error: results directory not found: $resultsPath")
       sys.exit(1)
 
     println(s"Scanning $resultsPath for benchmark results...")
-    val allData = loadResults(resultsPath)
+    val allData = loadResults(resultsPath, validTypes)
     if allData.isEmpty then
       println("No benchmark results found.")
       sys.exit(1)
@@ -53,7 +63,7 @@ object Aggregate:
 
   // ── Data loading ──────────────────────────────────────────────────────────
 
-  private def loadResults(resultsDir: os.Path): Map[String, Map[String, List[BenchmarkEntry]]] =
+  private def loadResults(resultsDir: os.Path, validTypes: Set[String]): Map[String, Map[String, List[BenchmarkEntry]]] =
     import scala.collection.mutable
 
     val byRepo = mutable.Map.empty[String, mutable.Map[String, mutable.Map[String, BenchmarkEntry]]]
@@ -62,7 +72,7 @@ object Aggregate:
       val repo = if path / os.up == resultsDir then resultsDir.last else (path / os.up).last
 
       val stem = path.last.stripSuffix(".json")
-      parseResultStem(stem) match
+      parseResultStem(stem, validTypes) match
         case Some((tool, scenario)) =>
           // Validate tool color knowledge
           try ToolColors.get(tool)
