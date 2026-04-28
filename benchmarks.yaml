@@ -40,6 +40,12 @@ hyperfine:
     test:
       warmup: 1
       runs: 10
+    compile-single-module:
+      warmup: 2
+      runs: 10
+    compile-all-modules:
+      warmup: 2
+      runs: 10
 
 build_tools:
   maven:
@@ -74,6 +80,9 @@ build_tools:
       sudo mv bleep /usr/local/bin/bleep
       rm -f bleep.tar.gz
     shutdown: ""
+  gradle:
+    install: "chmod +x gradlew || true"
+    shutdown: "./gradlew --stop || pkill -f GradleDaemon || true"
   sbt:
     install: |
       sudo apt-get update
@@ -107,9 +116,9 @@ repos:
     url: https://github.com/TheAlgorithms/Scala
     ref: de555349d5effb87962d3116eb08c9f374065112  # master @ 2026-04-10
 
-  - name: slf4j
-    url: https://github.com/qos-ch/slf4j
-    ref: d2073bece8310017914e1ff65d7107b2d4869c7d  # master @ 2025-11-24
+  - name: mockito
+    url: https://github.com/mockito/mockito
+    ref: a231205b240e7884a63bf0f63440012867a4da21  # v5.23.0
 
 tools:
   ######### java-algorithms #########
