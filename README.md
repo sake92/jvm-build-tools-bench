@@ -76,7 +76,7 @@ results/
     └── ...
 ```
 
-Each file is a standard hyperfine JSON export — use `cat results/java-algorithms/maven-clean-compile.json | jq .results[0].mean` to read the mean time in seconds.
+Each file is a standard hyperfine JSON export — use `cat results/java-algorithms/maven-compile-clean.json | jq .results[0].mean` to read the mean time in seconds.
 
 ---
 
