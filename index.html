@@ -11,12 +11,12 @@
   summary { cursor: pointer; padding: 0.75rem 1rem; font-size: 1.1rem; font-weight: 600;
             background: #f5f5f5; border-radius: 6px; list-style: none; }
   summary::-webkit-details-marker { display: none; }
-  summary::before { content: "▶ "; font-size: 0.8em; color: #666; }
-  details[open] summary::before { content: "▼ "; }
+  summary::before { content: "\25B6 "; font-size: 0.8em; color: #666; }
+  details[open] summary::before { content: "\25BC "; }
   .repo-body { padding: 1rem; }
   .charts { display: flex; flex-wrap: wrap; gap: 1rem; }
   figure { margin: 0; flex: 1 1 400px; }
-  figure img { width: 100%; height: auto; border: 1px solid #eee; border-radius: 4px; }
+  .chart-wrapper { width: 100%; position: relative; }
   figcaption { font-size: 0.85rem; color: #555; margin-top: 0.3rem; text-align: center; }
   .timestamp { font-size: 0.8rem; color: #999; }
   </style>
@@ -26,28 +26,37 @@
   <p>Compilation time comparison across build tools on real-world repos.
      Each chart shows mean time (lower is better).</p>
   <p><a href="https://github.com/sake92/jvm-build-tools-bench">View on GitHub</a></p>
-  <p class="timestamp">Generated 2026-04-28 13:16 UTC</p>
+  <p class="timestamp">Generated 2026-04-28 14:09 UTC</p>
 
   <details open>
     <summary>java-algorithms</summary>
     <div class="repo-body">
       <div class="charts">
       <figure>
-        <img src="java-algorithms/compile-clean/chart.svg" alt="compile-clean chart" loading="lazy">
+        <div class="chart-wrapper" style="height: 230px">
+          <canvas></canvas>
+        </div>
+        <script type="application/json">{"title":"Compile Clean","repo":"java-algorithms","scenario":"compile-clean","entries":[{"tool":"deder","mean":4.59179186084,"stddev":0.3971296914050617,"min":4.246370858040001,"max":5.38264824304,"median":4.463207967040001},{"tool":"sbt","mean":4.73275675852,"stddev":0.4708760171645143,"min":4.30618631992,"max":5.57974543892,"median":4.5533657734199995},{"tool":"mill","mean":6.095970245959999,"stddev":0.2878229865748109,"min":5.76937590716,"max":6.63875607316,"median":6.00804596116},{"tool":"maven","mean":7.31093394582,"stddev":0.2139755104819787,"min":7.041834403219999,"max":7.66448116822,"median":7.27595108572}]}</script>
         <figcaption>Compile Clean
           (<a href="java-algorithms/compile-clean/summary.json">json</a>,
            <a href="java-algorithms/compile-clean/summary.md">md</a>)
         </figcaption>
       </figure>
       <figure>
-        <img src="java-algorithms/compile-incremental/chart.svg" alt="compile-incremental chart" loading="lazy">
+        <div class="chart-wrapper" style="height: 230px">
+          <canvas></canvas>
+        </div>
+        <script type="application/json">{"title":"Compile Incremental","repo":"java-algorithms","scenario":"compile-incremental","entries":[{"tool":"sbt","mean":0.13296812866000002,"stddev":0.009081893888756775,"min":0.12419371446000002,"max":0.15372680046,"median":0.12937989946},{"tool":"deder","mean":0.17962873404000002,"stddev":0.011368799469497938,"min":0.16671749794000001,"max":0.19874856094,"median":0.17680642344000003},{"tool":"mill","mean":0.19172616496,"stddev":0.0311588380906455,"min":0.12463760416000001,"max":0.21991313116,"median":0.19989813766},{"tool":"maven","mean":7.013276158020001,"stddev":0.19574953952891475,"min":6.73507705222,"max":7.35071738122,"median":7.01077790972}]}</script>
         <figcaption>Compile Incremental
           (<a href="java-algorithms/compile-incremental/summary.json">json</a>,
            <a href="java-algorithms/compile-incremental/summary.md">md</a>)
         </figcaption>
       </figure>
       <figure>
-        <img src="java-algorithms/test/chart.svg" alt="test chart" loading="lazy">
+        <div class="chart-wrapper" style="height: 230px">
+          <canvas></canvas>
+        </div>
+        <script type="application/json">{"title":"Test","repo":"java-algorithms","scenario":"test","entries":[{"tool":"deder","mean":24.92315283974,"stddev":1.1182331168868407,"min":22.35877513844,"max":26.030196962439998,"median":25.31695219694},{"tool":"mill","mean":31.900834865999997,"stddev":0.7988526737421936,"min":30.9555357486,"max":33.4974229846,"median":31.6894428936},{"tool":"sbt","mean":40.711163799839994,"stddev":1.9608187262018815,"min":37.96841337194,"max":45.62185309694,"median":40.37227691544},{"tool":"maven","mean":68.07170349186,"stddev":3.4131192337256224,"min":63.421248947159995,"max":72.24008406616,"median":68.63587132616}]}</script>
         <figcaption>Test
           (<a href="java-algorithms/test/summary.json">json</a>,
            <a href="java-algorithms/test/summary.md">md</a>)
@@ -62,21 +71,30 @@
     <div class="repo-body">
       <div class="charts">
       <figure>
-        <img src="scala-algorithms/compile-clean/chart.svg" alt="compile-clean chart" loading="lazy">
+        <div class="chart-wrapper" style="height: 230px">
+          <canvas></canvas>
+        </div>
+        <script type="application/json">{"title":"Compile Clean","repo":"scala-algorithms","scenario":"compile-clean","entries":[{"tool":"sbt2","mean":0.9158470812200001,"stddev":0.13654846590819794,"min":0.7658574626200001,"max":1.16206640162,"median":0.8774822346200001},{"tool":"deder","mean":1.56151027226,"stddev":0.256547392336675,"min":1.25536036956,"max":2.0220251305600003,"median":1.4961416970599999},{"tool":"sbt","mean":1.8460881081600005,"stddev":0.28751036015687115,"min":1.5013021294600002,"max":2.41953633946,"median":1.7942136914600002},{"tool":"mill","mean":6.72903637978,"stddev":0.16536034835673574,"min":6.42720161398,"max":6.95541925698,"median":6.7731485324800005}]}</script>
         <figcaption>Compile Clean
           (<a href="scala-algorithms/compile-clean/summary.json">json</a>,
            <a href="scala-algorithms/compile-clean/summary.md">md</a>)
         </figcaption>
       </figure>
       <figure>
-        <img src="scala-algorithms/compile-incremental/chart.svg" alt="compile-incremental chart" loading="lazy">
+        <div class="chart-wrapper" style="height: 230px">
+          <canvas></canvas>
+        </div>
+        <script type="application/json">{"title":"Compile Incremental","repo":"scala-algorithms","scenario":"compile-incremental","entries":[{"tool":"deder","mean":0.057088502000000006,"stddev":0.01414213128979985,"min":0.0462476869,"max":0.09538533190000001,"median":0.0531180354},{"tool":"sbt","mean":0.13808683202,"stddev":0.00831634193970226,"min":0.12890377432,"max":0.15915153332,"median":0.13651119632},{"tool":"sbt2","mean":0.15122246836,"stddev":0.012560403720930258,"min":0.13410154656,"max":0.17269596556000003,"median":0.14962837306000001},{"tool":"mill","mean":0.1827519407,"stddev":0.0288687472704728,"min":0.13397820130000002,"max":0.2210233583,"median":0.1738539708}]}</script>
         <figcaption>Compile Incremental
           (<a href="scala-algorithms/compile-incremental/summary.json">json</a>,
            <a href="scala-algorithms/compile-incremental/summary.md">md</a>)
         </figcaption>
       </figure>
       <figure>
-        <img src="scala-algorithms/test/chart.svg" alt="test chart" loading="lazy">
+        <div class="chart-wrapper" style="height: 230px">
+          <canvas></canvas>
+        </div>
+        <script type="application/json">{"title":"Test","repo":"scala-algorithms","scenario":"test","entries":[{"tool":"deder","mean":0.16056052336000004,"stddev":0.027714585574476706,"min":0.14047818336,"max":0.23394677736000002,"median":0.14970783486000003},{"tool":"sbt2","mean":0.22501023788000002,"stddev":0.020448386599112408,"min":0.20010723358000002,"max":0.25504059958,"median":0.21826783958},{"tool":"sbt","mean":0.44306922596,"stddev":0.0511829831334723,"min":0.37293309346000003,"max":0.55264551246,"median":0.44833061596},{"tool":"mill","mean":0.9586538339,"stddev":0.04099663954121402,"min":0.8697189478,"max":1.0064405828,"median":0.9711874013000001}]}</script>
         <figcaption>Test
           (<a href="scala-algorithms/test/summary.json">json</a>,
            <a href="scala-algorithms/test/summary.md">md</a>)
@@ -87,5 +105,59 @@
     </div>
   </details>
 
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script>
+    const toolColors = {"mill":"#666666","bleep":"#ff6b35","deder":"#2ca02c","maven":"#1f77b4","sbt":"#01191F","sbt2":"#d62728"};
+    document.querySelectorAll('.chart-wrapper canvas').forEach(canvas => {
+      const figure = canvas.closest('figure');
+      const dataEl = figure && figure.querySelector('script[type="application/json"]');
+      if (!dataEl) return;
+      const data = JSON.parse(dataEl.textContent);
+      const entries = data.entries;
+      new Chart(canvas, {
+        type: 'bar',
+        data: {
+          labels: entries.map(e => e.tool),
+          datasets: [{
+            data: entries.map(e => e.mean * 1000),
+            backgroundColor: entries.map(e => toolColors[e.tool] || '#999'),
+            borderWidth: 0,
+            borderRadius: 3
+          }]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function(ctx) {
+                  var e = entries[ctx.dataIndex];
+                  return [
+                    (e.mean * 1000).toFixed(1) + ' ms',
+                    '± ' + (e.stddev * 1000).toFixed(1) + ' ms',
+                    'min ' + (e.min * 1000).toFixed(1) + ' / max ' + (e.max * 1000).toFixed(1)
+                  ];
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              title: { display: true, text: 'Mean time (ms) — lower is better' },
+              beginAtZero: true,
+              ticks: { callback: function(v) { return v.toLocaleString(); } }
+            },
+            y: {
+              grid: { display: false }
+            }
+          }
+        }
+      });
+    });
+  </script>
 </body>
 </html>
