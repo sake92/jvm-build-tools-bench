@@ -15,20 +15,23 @@ import scala.util.{Try, Using}
 
 // ── Configuration model ────────────────────────────────────────────────────
 
-case class HyperfinePhaseConfig(
+case class BenchmarkTypeConfig(
   warmup: Int,
   runs: Int
 ) derives YamlDecoder
 
 case class HyperfineConfig(
-  clean_compile: HyperfinePhaseConfig,
-  incremental_compile: HyperfinePhaseConfig,
-  test_all: HyperfinePhaseConfig
+  benchmark_types: Map[String, BenchmarkTypeConfig]
 ) derives YamlDecoder
 
 case class BuildToolDef(
   install: String,
   shutdown: Option[String] = None
+) derives YamlDecoder
+
+case class ToolBenchmark(
+  command: String,
+  touch_files: List[String] = Nil
 ) derives YamlDecoder
 
 case class RepoDef(
@@ -42,10 +45,7 @@ case class ToolConfig(
   build_tool_name: String,
   repo: String,
   setup: Option[String] = None,
-  compile_clean: String,
-  compile_incremental: String,
-  incremental_files: List[String] = Nil,
-  test_all: Option[String] = None
+  benchmarks: Map[String, ToolBenchmark]
 ) derives YamlDecoder
 
 case class BenchmarkConfig(
@@ -196,21 +196,13 @@ def overlayBuildFiles(scriptDir: os.Path, repoName: String, toolName: String, ta
 
 // ── Scenario aliases ────────────────────────────────────────────────────────
 
-val scenarioAliases: Map[String, String] = Map(
-  "clean-compile"         -> "clean-compile",
-  "incremental-compile"   -> "incremental-compile",
-  "test-all"              -> "test-all",
-  "clean"                 -> "clean-compile",
-  "incremental"           -> "incremental-compile"
-)
-
-def parseResultStem(stem: String): Option[(String, String)] =
-  scenarioAliases.toSeq
-    .sortBy(-_._1.length)
+def parseResultStem(stem: String, validBenchmarkTypes: Set[String]): Option[(String, String)] =
+  validBenchmarkTypes.toSeq
+    .sortBy(-_.length)  // longest first to avoid partial matches
     .collectFirst {
-      case (suffix, scenario) if stem.endsWith(s"-$suffix") && stem.stripSuffix(s"-$suffix").nonEmpty =>
+      case suffix if stem.endsWith(s"-$suffix") && stem.stripSuffix(s"-$suffix").nonEmpty =>
         val tool = stem.stripSuffix(s"-$suffix")
-        (tool, scenario)
+        (tool, suffix)
     }
 
 // ── Formatting helpers ──────────────────────────────────────────────────────
