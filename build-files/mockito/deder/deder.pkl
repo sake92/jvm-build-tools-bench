@@ -1,0 +1,60 @@
+amends "https://sake92.github.io/deder/config/v0.7.0/DederProject.pkl"
+
+local const javacOptions = new Listing {
+  "-source" "11"
+  "-target" "11"
+}
+
+local const core = new JavaModule {
+  id = "mockito-core"
+  root = "mockito-core"
+  sources = new Listing {
+    "src/main/java"
+  }
+  deps {
+    "net.bytebuddy:byte-buddy:1.17.7"
+    "net.bytebuddy:byte-buddy-agent:1.17.7"
+    "org.objenesis:objenesis:3.3"
+  }
+  javacOptions = javacOptions
+}
+
+local const junitjupiter = new JavaModule {
+  id = "mockito-junit-jupiter"
+  root = "mockito-extensions/mockito-junit-jupiter"
+  sources = new Listing {
+    "src/main/java"
+  }
+  moduleDeps { core }
+  deps {
+    "org.junit.jupiter:junit-jupiter-api:5.13.4"
+  }
+  javacOptions = javacOptions
+}
+
+local const proxy = new JavaModule {
+  id = "mockito-proxy"
+  root = "mockito-extensions/mockito-proxy"
+  sources = new Listing {
+    "src/main/java"
+  }
+  moduleDeps { core }
+  javacOptions = javacOptions
+}
+
+local const subclass = new JavaModule {
+  id = "mockito-subclass"
+  root = "mockito-extensions/mockito-subclass"
+  sources = new Listing {
+    "src/main/java"
+  }
+  moduleDeps { core }
+  javacOptions = javacOptions
+}
+
+modules {
+  core
+  junitjupiter
+  proxy
+  subclass
+}
