@@ -300,7 +300,7 @@ tools:
   # ── slf4j: Maven ──────────────────────────────────────────────────────────────────
   - build_tool_name: maven
     repo: slf4j
-    setup: "mvn dependency:resolve -q"
+    setup: "mvn install -DskipTests -q"
     benchmarks:
       compile-clean:
         command: "mvn clean compile -q"

@@ -94,8 +94,8 @@ object RunBench:
           System.err.println(s"  ${e.getMessage}")
           failedPhases = failedPhases :+ name
 
-    // Clone/update repo
-    val repoDir = Git.cloneOrUpdate(repoDef, reposDirPath)
+    // Clone/update repo (per repo+build_tool for isolation)
+    val repoDir = Git.cloneOrUpdate(repoDef, toolConfig.build_tool_name, reposDirPath)
 
     // Overlay build files
     overlayBuildFiles(scriptDir, toolConfig.repo, toolConfig.build_tool_name, repoDir)

@@ -116,11 +116,11 @@ object Git:
   private def isSha(ref: String): Boolean =
     ref.matches("[0-9a-f]{40}")
 
-  def cloneOrUpdate(repo: RepoDef, reposDir: os.Path): os.Path =
-    val repoDir = reposDir / repo.name
+  def cloneOrUpdate(repo: RepoDef, toolName: String, reposDir: os.Path): os.Path =
+    val repoDir = reposDir / repo.name / toolName
 
     if os.exists(repoDir / ".git") then
-      println(s">>> Updating ${repo.name} to ${repo.ref}...")
+      println(s">>> Updating ${repo.name} (${toolName}) to ${repo.ref}...")
       os.proc("git", "-C", repoDir.toString, "fetch", "--quiet", "origin").call()
       if isSha(repo.ref) then
         os.proc("git", "-C", repoDir.toString, "fetch", "--quiet", "origin", repo.ref)
@@ -130,7 +130,7 @@ object Git:
         os.proc("git", "-C", repoDir.toString, "checkout", "--quiet", repo.ref).call()
         os.proc("git", "-C", repoDir.toString, "reset", "--quiet", "--hard", s"origin/${repo.ref}").call()
     else
-      println(s">>> Cloning ${repo.name}...")
+      println(s">>> Cloning ${repo.name} (${toolName})...")
       os.makeDir.all(reposDir)
       if isSha(repo.ref) then
         os.proc("git", "clone", "--quiet", repo.url, repoDir.toString).call()
