@@ -304,3 +304,58 @@ tools:
           - src/main/scala/Sort/MergeSort.scala
       test:
         command: "mill __.testLocal"
+
+  ######### mockito #########
+  # ── mockito: Gradle (native) ──────────────────────────────────
+  - build_tool_name: gradle
+    repo: mockito
+    setup: "./gradlew tasks --no-build-cache -q || true"
+    benchmarks:
+      compile-single-module:
+        command: "./gradlew clean :mockito-core:compileJava --no-build-cache -q"
+      compile-all-modules:
+        command: "./gradlew clean compileJava --no-build-cache -q"
+
+  # ── mockito: Maven ────────────────────────────────────────────
+  # build-files/mockito/maven/ is copied over the cloned repo
+  - build_tool_name: maven
+    repo: mockito
+    setup: "mvn dependency:resolve -pl mockito-core,mockito-junit-jupiter,mockito-proxy,mockito-subclass -q"
+    benchmarks:
+      compile-single-module:
+        command: "mvn clean compile -pl mockito-core -q"
+      compile-all-modules:
+        command: "mvn clean compile -q"
+
+  # ── mockito: Mill ─────────────────────────────────────────────
+  # build-files/mockito/mill/ is copied over the cloned repo
+  - build_tool_name: mill
+    repo: mockito
+    setup: "mill __.compile"
+    benchmarks:
+      compile-single-module:
+        command: "mill clean && mill core.compile"
+      compile-all-modules:
+        command: "mill clean && mill __.compile"
+
+  # ── mockito: sbt ──────────────────────────────────────────────
+  # build-files/mockito/sbt/ is copied over the cloned repo
+  - build_tool_name: sbt
+    repo: mockito
+    setup: "sbt --client compile"
+    benchmarks:
+      compile-single-module:
+        command: "sbt --client 'clean; mockitoCore/compile'"
+      compile-all-modules:
+        command: "sbt --client 'clean; compile'"
+
+  # ── mockito: Deder ────────────────────────────────────────────
+  # build-files/mockito/deder/ is copied over the cloned repo
+  - build_tool_name: deder
+    repo: mockito
+    setup: "deder exec -t compile"
+    benchmarks:
+      compile-single-module:
+        command: "deder clean && deder exec -t compile -m mockito-core"
+      compile-all-modules:
+        command: "deder clean && deder exec -t compile"
