@@ -41,24 +41,18 @@ Build files that a repo doesn't ship natively (e.g. a `build.mill` for a Maven-o
 | hyperfine | `cargo install hyperfine` or [releases page](https://github.com/sharkdp/hyperfine/releases) |
 | Build tool | Maven / Mill / Deder / sbt — see `benchmarks.yaml` for `install` commands |
 
-No Python, `yq`, or `matplotlib` needed — all scripting is in Scala, charts use JFreeChart.
+All scripting is in Scala, charts use JFreeChart.
 
 ---
 
 ## Running locally
 
 ```bash
-# benchmark Maven on java-algorithms
-scala-cli run run_bench.scala -- --benchmark java-algorithms-maven
-
-# benchmark Mill, store results in a custom directory
-scala-cli run run_bench.scala -- --benchmark java-algorithms-mill --results-dir /tmp/mill-results
-
-# keep cloned repos across runs (speeds up repeated runs)
-scala-cli run run_bench.scala -- --benchmark java-algorithms-sbt --repos-dir ~/bench-repos
-
 # list all available benchmarks
 scala-cli run run_bench.scala -- --list-benchmarks
+
+# benchmark Maven on java-algorithms
+scala-cli run run_bench.scala -- --benchmark java-algorithms-maven
 ```
 
 Results land in `results/` by default:
@@ -83,7 +77,7 @@ Each file is a standard hyperfine JSON export — use `cat results/java-algorith
 ## Results
 
 Results are published to **GitHub Pages** after each CI run:
-> `https://<your-org>.github.io/jvm-build-tools-bench/`
+> `https://sake92.github.io/jvm-build-tools-bench/`
 
 The page has one collapsible section per repo with separate SVG charts and report links for each scenario.
 
