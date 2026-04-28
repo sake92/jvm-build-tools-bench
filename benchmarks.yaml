@@ -107,6 +107,10 @@ repos:
     url: https://github.com/TheAlgorithms/Scala
     ref: de555349d5effb87962d3116eb08c9f374065112  # master @ 2026-04-10
 
+  - name: slf4j
+    url: https://github.com/qos-ch/slf4j
+    ref: d2073bece8310017914e1ff65d7107b2d4869c7d  # master @ 2025-11-24
+
 tools:
   ######### java-algorithms #########
   # ── java-algorithms: Maven ──────────────────────────────────────────────────────────
@@ -291,3 +295,19 @@ tools:
           - src/main/scala/Sort/MergeSort.scala
       test:
         command: "mill __.testLocal"
+
+  ######### slf4j #########
+  # ── slf4j: Maven ──────────────────────────────────────────────────────────────────
+  - build_tool_name: maven
+    repo: slf4j
+    setup: "mvn dependency:resolve -q"
+    benchmarks:
+      compile-clean:
+        command: "mvn clean compile -q"
+      compile-incremental:
+        command: "mvn compile -q"
+        touch_files:
+          - slf4j-api/src/main/java/org/slf4j/Logger.java
+          - slf4j-api/src/main/java/org/slf4j/helpers/MessageFormatter.java
+      test:
+        command: "mvn test -q"
