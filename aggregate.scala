@@ -29,6 +29,9 @@ object Aggregate:
     val outputPath = os.Path(config.outputDir, os.pwd)
 
     val benchmarksYamlPath = os.Path(config.benchmarksYaml, os.pwd)
+    if !os.exists(benchmarksYamlPath) then
+      System.err.println(s"Error: benchmarks.yaml not found at $benchmarksYamlPath")
+      sys.exit(1)
     val benchConfig = Config.load(benchmarksYamlPath)
     val validTypes = benchConfig.hyperfine.benchmark_types.keySet
     println(s"Valid benchmark types: ${validTypes.toSeq.sorted.mkString(", ")}")

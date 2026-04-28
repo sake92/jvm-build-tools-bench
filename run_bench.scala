@@ -121,13 +121,13 @@ object RunBench:
     val writtenFiles = List.newBuilder[os.Path]
 
     for (benchmarkType, bm) <- toolConfig.benchmarks.toSeq.sortBy(_._1) do
-      val hfConfig = hf.benchmark_types.getOrElse(
-        benchmarkType,
-        throw new RuntimeException(
-          s"Benchmark type '$benchmarkType' is not declared in hyperfine.benchmark_types. " +
+      val hfConfig = hf.benchmark_types.getOrElse(benchmarkType, {
+        System.err.println(
+          s"Error: Benchmark type '$benchmarkType' is not declared in hyperfine.benchmark_types. " +
           s"Available types: ${hf.benchmark_types.keys.toSeq.sorted.mkString(", ")}"
         )
-      )
+        sys.exit(1)
+      })
 
       runPhase(benchmarkType) {
         println()

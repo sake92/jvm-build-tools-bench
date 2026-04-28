@@ -194,7 +194,7 @@ def overlayBuildFiles(scriptDir: os.Path, repoName: String, toolName: String, ta
         os.perms.set(dest, os.perms(src))
     }
 
-// ── Scenario aliases ────────────────────────────────────────────────────────
+// ── Result parsing ──────────────────────────────────────────────────────────
 
 def parseResultStem(stem: String, validBenchmarkTypes: Set[String]): Option[(String, String)] =
   validBenchmarkTypes.toSeq
