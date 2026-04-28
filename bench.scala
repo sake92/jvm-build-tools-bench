@@ -87,6 +87,7 @@ object ToolColors:
     "maven" -> "#1f77b4",
     "mill"  -> "#666666",
     "deder" -> "#2ca02c",
+    "gradle" -> "#02303A",
     "bleep" -> "#ff6b35",
     "sbt"   -> "#01191F",
     "sbt2"  -> "#d62728"
