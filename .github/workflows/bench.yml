@@ -66,6 +66,9 @@ jobs:
       - name: Install build tool
         run: |
           scala-cli run run_bench.scala -- --install-cmd --benchmark "${{ matrix.benchmark }}"
+      - name: Enable smoke mode for PRs
+        if: github.event_name == 'pull_request'
+        run: echo "BENCH_SMOKE=true" >> "$GITHUB_ENV"
       - name: Run benchmark
         run: |
           scala-cli run run_bench.scala -- \

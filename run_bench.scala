@@ -129,6 +129,15 @@ object RunBench:
         sys.exit(1)
       })
 
+      // Smoke mode override: PRs use warmup=0, runs=1 for fast pipeline validation
+      val (warmup, runs) = sys.env.get("BENCH_SMOKE") match
+        case Some("true" | "1") =>
+          println(s">>> Smoke mode: overriding $benchmarkType " +
+            s"(warmup ${hfConfig.warmup}→0, runs ${hfConfig.runs}→1)")
+          (0, 1)
+        case _ =>
+          (hfConfig.warmup, hfConfig.runs)
+
       runPhase(benchmarkType) {
         println()
 
@@ -142,7 +151,7 @@ object RunBench:
         }
 
         val outFile = repoResultsDir / s"${toolConfig.build_tool_name}-$benchmarkType.json"
-        Hyperfine.run(bm.command, hfConfig.warmup, hfConfig.runs, outFile, repoDir)
+        Hyperfine.run(bm.command, warmup, runs, outFile, repoDir)
         println(s"  Results: $outFile")
         writtenFiles += outFile
       }
