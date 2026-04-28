@@ -4,13 +4,15 @@
 
 Benchmarks comparing JVM build tools (Maven, Gradle, Mill, bleep, sbt, …) on real-world open-source repositories using [hyperfine](https://github.com/sharkdp/hyperfine).
 
-Three scenarios are measured per tool:
+Multiple benchmark types are measured per tool — each defined in `benchmarks.yaml` as a named entry under `hyperfine.benchmark_types`. Typical types include:
 
-| Scenario | Description |
+| Benchmark type | Description |
 |---|---|
-| **clean compile** | Full rebuild from scratch (`clean` + compile) |
-| **incremental compile** | Touch a set of source files, recompile |
-| **test all** | Run all tests |
+| **compile-clean** | Full rebuild from scratch (clean + compile) |
+| **compile-incremental** | Touch a set of source files, recompile |
+| **test** | Run all tests |
+
+Additional types (e.g., `compile-module-abc`) can be added without changing any Scala code.
 
 Results are exported as hyperfine JSON and uploaded as GitHub Actions artifacts.  
 After all tools finish, an `aggregate` job produces a unified comparison.
@@ -20,7 +22,7 @@ After all tools finish, an `aggregate` job produces a unified comparison.
 ## How it works
 
 1. **`benchmarks.yaml`** — single source of truth: which repos to clone, which repo + build tool benchmarks to run, what commands to execute, and the shared hyperfine settings for each benchmark scenario.
-2. **`run_bench.scala`** — Scala CLI runner. Parses `benchmarks.yaml` directly (no `yq` needed), clones the target repo, optionally overlays extra build files, runs setup, then benchmarks clean and incremental compilation.
+2. **`run_bench.scala`** — Scala CLI runner. Parses `benchmarks.yaml` directly (no `yq` needed), clones the target repo, optionally overlays extra build files, runs setup, then benchmarks each benchmark type defined for the tool.
 3. **`aggregate.scala`** — scales all per-tool hyperfine JSON results into a unified comparison with SVG charts, markdown tables, and a static HTML page.
 4. **`.github/workflows/bench.yml`** — CI workflow. The benchmark list is read dynamically from `benchmarks.yaml` to build a matrix; each repo + build tool combination runs on a **separate fresh runner** for maximum isolation. An `aggregate` job runs after all tools finish.
 
@@ -64,13 +66,13 @@ Results land in `results/` by default:
 ```text
 results/
 ├── java-algorithms/
-│   ├── maven-clean-compile.json
-│   ├── maven-incremental-compile.json
-│   ├── maven-test-all.json
+│   ├── maven-compile-clean.json
+│   ├── maven-compile-incremental.json
+│   ├── maven-test.json
 │   └── ...
 └── scala-algorithms/
-    ├── sbt-clean-compile.json
-    ├── sbt-incremental-compile.json
+    ├── sbt-compile-clean.json
+    ├── sbt-compile-incremental.json
     └── ...
 ```
 
@@ -97,7 +99,7 @@ You can also download the **`results-aggregated`** artifact from the Actions tab
 To run aggregation locally after collecting results:
 
 ```bash
-scala-cli run aggregate.scala -- --results-dir results/ --output-dir aggregated/
+scala-cli run aggregate.scala -- --results-dir results/ --output-dir aggregated/ --benchmarks-yaml benchmarks.yaml
 ```
 
 ASCII bar charts are also printed to stdout during aggregation (handy for reading directly in CI logs).
