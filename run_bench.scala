@@ -116,49 +116,36 @@ object RunBench:
     val repoResultsDir = resultsDirPath / toolConfig.repo
     os.makeDir.all(repoResultsDir)
 
-    val cleanCompileJson = repoResultsDir / s"${toolConfig.build_tool_name}-clean-compile.json"
-    val incrCompileJson  = repoResultsDir / s"${toolConfig.build_tool_name}-incremental-compile.json"
-    val testAllJson      = repoResultsDir / s"${toolConfig.build_tool_name}-test-all.json"
-
     val hf = benchConfig.hyperfine
 
-    // Clean compile
-    runPhase("clean compile") {
-      println()
-      Hyperfine.run(toolConfig.compile_clean, hf.clean_compile.warmup, hf.clean_compile.runs, cleanCompileJson, repoDir)
-      println(s"  Results: $cleanCompileJson")
-    }
+    val writtenFiles = List.newBuilder[os.Path]
 
-    // Incremental compile — touch files first
-    runPhase("incremental compile") {
-      println()
-      val filesToTouch = toolConfig.incremental_files
-      println(s">>> Touching ${filesToTouch.size} file(s) for incremental run...")
-      filesToTouch.foreach { f =>
-        val p = repoDir / os.RelPath(f)
-        if os.exists(p) then
-          os.write.append(p, "")
-        else
-          System.err.println(s"  Warning: file not found: $p")
-      }
-      Hyperfine.run(
-        toolConfig.compile_incremental,
-        hf.incremental_compile.warmup,
-        hf.incremental_compile.runs,
-        incrCompileJson,
-        repoDir
+    for (benchmarkType, bm) <- toolConfig.benchmarks.toSeq.sortBy(_._1) do
+      val hfConfig = hf.benchmark_types.getOrElse(
+        benchmarkType,
+        throw new RuntimeException(
+          s"Benchmark type '$benchmarkType' is not declared in hyperfine.benchmark_types. " +
+          s"Available types: ${hf.benchmark_types.keys.toSeq.sorted.mkString(", ")}"
+        )
       )
-      println(s"  Results: $incrCompileJson")
-    }
 
-    // Test all (optional)
-    toolConfig.test_all.foreach { testCmd =>
-      runPhase("test all") {
+      runPhase(benchmarkType) {
         println()
-        Hyperfine.run(testCmd, hf.test_all.warmup, hf.test_all.runs, testAllJson, repoDir)
-        println(s"  Results: $testAllJson")
+
+        // Touch files (if any)
+        bm.touch_files.foreach { f =>
+          val p = repoDir / os.RelPath(f)
+          if os.exists(p) then
+            os.write.append(p, "")
+          else
+            System.err.println(s"  Warning: file not found: $p")
+        }
+
+        val outFile = repoResultsDir / s"${toolConfig.build_tool_name}-$benchmarkType.json"
+        Hyperfine.run(bm.command, hfConfig.warmup, hfConfig.runs, outFile, repoDir)
+        println(s"  Results: $outFile")
+        writtenFiles += outFile
       }
-    }
 
     // Shutdown
     buildToolDef.shutdown.foreach { cmd =>
@@ -174,9 +161,9 @@ object RunBench:
 
     println()
     println("=== Done ===")
-    println("Results written to:")
-    println(s"  $cleanCompileJson")
-    println(s"  $incrCompileJson")
-    toolConfig.test_all.foreach { _ => println(s"  $testAllJson") }
+    val files = writtenFiles.result()
+    if files.nonEmpty then
+      println("Results written to:")
+      files.foreach(f => println(s"  $f"))
 
     if failedPhases.nonEmpty then sys.exit(1)
