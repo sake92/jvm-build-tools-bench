@@ -295,19 +295,3 @@ tools:
           - src/main/scala/Sort/MergeSort.scala
       test:
         command: "mill __.testLocal"
-
-  ######### slf4j #########
-  # ── slf4j: Maven ──────────────────────────────────────────────────────────────────
-  - build_tool_name: maven
-    repo: slf4j
-    setup: "mvn install -DskipTests -q"
-    benchmarks:
-      compile-clean:
-        command: "mvn clean compile -q"
-      compile-incremental:
-        command: "mvn compile -q"
-        touch_files:
-          - slf4j-api/src/main/java/org/slf4j/Logger.java
-          - slf4j-api/src/main/java/org/slf4j/helpers/MessageFormatter.java
-      test:
-        command: "mvn test -q"
