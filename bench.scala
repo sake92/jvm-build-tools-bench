@@ -3,8 +3,6 @@
 //> using dep com.lihaoyi::os-lib:0.11.9-M7
 //> using dep com.lihaoyi::mainargs:0.7.8
 //> using dep com.lihaoyi::upickle:4.4.3
-//> using dep org.jfree:jfreechart:1.5.6
-//> using dep org.jfree:jfreesvg:3.4.4
 
 package bench
 
@@ -93,6 +91,8 @@ object ToolColors:
     "sbt"   -> "#01191F",
     "sbt2"  -> "#d62728"
   )
+
+  val all: Map[String, String] = colors
 
   def get(tool: String): String = colors.getOrElse(tool,
     throw new IllegalArgumentException(

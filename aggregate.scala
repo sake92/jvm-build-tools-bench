@@ -3,7 +3,6 @@
 package bench
 
 import mainargs.{main, arg, ParserForClass}
-import java.awt.Color
 import java.time.{ZoneOffset, ZonedDateTime}
 import java.time.format.DateTimeFormatter
 
@@ -55,7 +54,6 @@ object Aggregate:
         writeSummaryJson(repo, scenario, entries, scenarioOut)
         writeSummaryMd(repo, scenario, entries, scenarioOut)
         asciiBarChart(repo, scenario, entries)
-        writeSvgChart(repo, scenario, entries, scenarioOut)
 
     os.makeDir.all(outputPath)
     writeIndexHtml(allData, outputPath)
@@ -178,79 +176,17 @@ object Aggregate:
       val barPadded = bar.padTo(BarWidth, ' ')
       println(f"    $label  $barPadded  $meanMs%8.1f ms ± $stddevMs%.1f")
 
-  // ── SVG chart (JFreeChart + jfreesvg) ────────────────────────────────────
-
-  private def writeSvgChart(repo: String, scenario: String, entries: List[BenchmarkEntry], outputDir: os.Path): Unit =
-    try
-      import org.jfree.chart.{ChartFactory, StandardChartTheme}
-      import org.jfree.chart.plot.{CategoryPlot, PlotOrientation}
-      import org.jfree.chart.renderer.category.BarRenderer
-      import org.jfree.data.category.DefaultCategoryDataset
-
-      // Build dataset — entries already sorted ascending (fastest first)
-      val dataset = new DefaultCategoryDataset()
-      for e <- entries do
-        dataset.addValue(e.mean * 1000, "Mean", e.tool)
-
-      // Create chart
-      val chart = ChartFactory.createBarChart(
-        "",
-        "",
-        "Mean time (ms) — lower is better",
-        dataset,
-        PlotOrientation.HORIZONTAL,
-        false,
-        false,
-        false
-      )
-
-      val title = s"$repo: ${scenario.replace("-", " ").split(" ").map(_.capitalize).mkString(" ")}"
-      chart.setTitle(title)
-
-      // Style
-      val theme = StandardChartTheme.createJFreeTheme()
-      theme.apply(chart)
-
-      val plot = chart.getPlot.asInstanceOf[CategoryPlot]
-      plot.setBackgroundPaint(java.awt.Color.WHITE)
-      plot.setRangeGridlinePaint(java.awt.Color.LIGHT_GRAY)
-      plot.setOutlineVisible(false)
-
-      // Custom renderer with per-bar colors
-      val renderer = new BarRenderer {
-        override def getItemPaint(row: Int, column: Int): java.awt.Paint =
-          val tool = entries(column).tool
-          try hexToColor(ToolColors.get(tool))
-          catch case _: Exception => java.awt.Color.GRAY
-      }
-      renderer.setDrawBarOutline(false)
-      plot.setRenderer(renderer)
-
-      // Size
-      val height = Math.max(150, entries.size * 40 + 100)
-      val width = 800
-
-      // Export to SVG via jfreesvg
-      import org.jfree.graphics2d.svg.SVGGraphics2D
-      val svgG2d = new SVGGraphics2D(width, height)
-      val rect = new java.awt.Rectangle(0, 0, width, height)
-      svgG2d.setClip(rect)
-      chart.draw(svgG2d, rect)
-
-      val svgText = svgG2d.getSVGElement
-      val out = outputDir / "chart.svg"
-      os.write.over(out, svgText)
-      println(s"  Wrote $out")
-    catch
-      case e: Exception =>
-        System.err.println(s"  SVG chart generation failed for $scenario: ${e.getMessage}")
-
-  // ── HTML index page ───────────────────────────────────────────────────────
+  // ── HTML index page with Chart.js ─────────────────────────────────────────
 
   private def writeIndexHtml(allData: Map[String, Map[String, List[BenchmarkEntry]]], outputDir: os.Path): Unit =
     val timestamp = ZonedDateTime.now(ZoneOffset.UTC).format(
       DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm 'UTC'")
     )
+
+    // Tool colors as a JS object literal
+    val toolColorsJs = ToolColors.all.map { case (tool, color) =>
+      s""""$tool":"$color""""
+    }.mkString("{", ",", "}")
 
     val sections = new StringBuilder
     var first = true
@@ -259,11 +195,20 @@ object Aggregate:
       first = false
 
       val charts = new StringBuilder
-      for (scenario, _) <- scenarios.toSeq.sortBy(_._1) do
+      for (scenario, entries) <- scenarios.toSeq.sortBy(_._1) do
         val scenarioTitle = scenario.replace("-", " ").split(" ").map(_.capitalize).mkString(" ")
+        val chartHeight = Math.max(150, entries.size * 35 + 90)
+        // Build a clean JSON array of entries
+        val entriesJson = entries.map { e =>
+          s"""{"tool":"${e.tool}","mean":${e.mean},"stddev":${e.stddev},"min":${e.min},"max":${e.max},"median":${e.median}}"""
+        }.mkString("[", ",", "]")
+        val chartJson = s"""{"title":"$scenarioTitle","repo":"$repo","scenario":"$scenario","entries":$entriesJson}"""
         charts.append(
           s"""      <figure>
-             |        <img src="$repo/$scenario/chart.svg" alt="$scenario chart" loading="lazy">
+             |        <div class="chart-wrapper" style="height: ${chartHeight}px">
+             |          <canvas></canvas>
+             |        </div>
+             |        <script type="application/json">$chartJson</script>
              |        <figcaption>$scenarioTitle
              |          (<a href="$repo/$scenario/summary.json">json</a>,
              |           <a href="$repo/$scenario/summary.md">md</a>)
@@ -298,34 +243,82 @@ object Aggregate:
          |  summary { cursor: pointer; padding: 0.75rem 1rem; font-size: 1.1rem; font-weight: 600;
          |            background: #f5f5f5; border-radius: 6px; list-style: none; }
          |  summary::-webkit-details-marker { display: none; }
-         |  summary::before { content: "▶ "; font-size: 0.8em; color: #666; }
-         |  details[open] summary::before { content: "▼ "; }
+         |  summary::before { content: "\\25B6 "; font-size: 0.8em; color: #666; }
+         |  details[open] summary::before { content: "\\25BC "; }
          |  .repo-body { padding: 1rem; }
          |  .charts { display: flex; flex-wrap: wrap; gap: 1rem; }
          |  figure { margin: 0; flex: 1 1 400px; }
-         |  figure img { width: 100%; height: auto; border: 1px solid #eee; border-radius: 4px; }
-          |  figcaption { font-size: 0.85rem; color: #555; margin-top: 0.3rem; text-align: center; }
-          |  .timestamp { font-size: 0.8rem; color: #999; }
-          |  </style>
-          |</head>
-          |<body>
-          |  <h1>JVM Build Tools Benchmark</h1>
-          |  <p>Compilation time comparison across build tools on real-world repos.
-          |     Each chart shows mean time (lower is better).</p>
-          |  <p><a href="https://github.com/sake92/jvm-build-tools-bench">View on GitHub</a></p>
-          |  <p class="timestamp">Generated $timestamp</p>
-          |
-          |$sections
-          |</body>
+         |  .chart-wrapper { width: 100%; position: relative; }
+         |  figcaption { font-size: 0.85rem; color: #555; margin-top: 0.3rem; text-align: center; }
+         |  .timestamp { font-size: 0.8rem; color: #999; }
+         |  </style>
+         |</head>
+         |<body>
+         |  <h1>JVM Build Tools Benchmark</h1>
+         |  <p>Compilation time comparison across build tools on real-world repos.
+         |     Each chart shows mean time (lower is better).</p>
+         |  <p><a href="https://github.com/sake92/jvm-build-tools-bench">View on GitHub</a></p>
+         |  <p class="timestamp">Generated $timestamp</p>
+         |
+         |$sections
+         |
+         |  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+         |  <script>
+         |    const toolColors = $toolColorsJs;
+         |    document.querySelectorAll('.chart-wrapper canvas').forEach(canvas => {
+         |      const figure = canvas.closest('figure');
+         |      const dataEl = figure && figure.querySelector('script[type="application/json"]');
+         |      if (!dataEl) return;
+         |      const data = JSON.parse(dataEl.textContent);
+         |      const entries = data.entries;
+         |      new Chart(canvas, {
+         |        type: 'bar',
+         |        data: {
+         |          labels: entries.map(e => e.tool),
+         |          datasets: [{
+         |            data: entries.map(e => e.mean * 1000),
+         |            backgroundColor: entries.map(e => toolColors[e.tool] || '#999'),
+         |            borderWidth: 0,
+         |            borderRadius: 3
+         |          }]
+         |        },
+         |        options: {
+         |          indexAxis: 'y',
+         |          responsive: true,
+         |          maintainAspectRatio: false,
+         |          plugins: {
+         |            legend: { display: false },
+         |            tooltip: {
+         |              callbacks: {
+         |                label: function(ctx) {
+         |                  var e = entries[ctx.dataIndex];
+         |                  return [
+         |                    (e.mean * 1000).toFixed(1) + ' ms',
+         |                    '± ' + (e.stddev * 1000).toFixed(1) + ' ms',
+         |                    'min ' + (e.min * 1000).toFixed(1) + ' / max ' + (e.max * 1000).toFixed(1)
+         |                  ];
+         |                }
+         |              }
+         |            }
+         |          },
+         |          scales: {
+         |            x: {
+         |              title: { display: true, text: 'Mean time (ms) — lower is better' },
+         |              beginAtZero: true,
+         |              ticks: { callback: function(v) { return v.toLocaleString(); } }
+         |            },
+         |            y: {
+         |              grid: { display: false }
+         |            }
+         |          }
+         |        }
+         |      });
+         |    });
+         |  </script>
+         |</body>
          |</html>
          |""".stripMargin
 
     val out = outputDir / "index.html"
     os.write.over(out, html)
     println(s"  Wrote $out")
-
-  // ── Color utility ─────────────────────────────────────────────────────────
-
-  private def hexToColor(hex: String): Color =
-    val h = hex.stripPrefix("#")
-    new Color(Integer.parseInt(h, 16))
