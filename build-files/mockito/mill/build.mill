@@ -1,0 +1,33 @@
+//| mill-version: 1.1.2
+//| mill-jvm-version: system
+package build
+
+import mill.*
+import mill.javalib.*
+
+object core extends JavaModule {
+  override def millSourcePath = build.millSourcePath / "mockito-core"
+  def mvnDeps = Seq(
+    mvn"net.bytebuddy:byte-buddy:1.17.7",
+    mvn"net.bytebuddy:byte-buddy-agent:1.17.7",
+    mvn"org.objenesis:objenesis:3.3",
+  )
+}
+
+object junitjupiter extends JavaModule {
+  override def millSourcePath = build.millSourcePath / "mockito-extensions" / "mockito-junit-jupiter"
+  def moduleDeps = Seq(core)
+  def mvnDeps = Seq(
+    mvn"org.junit.jupiter:junit-jupiter-api:5.13.4",
+  )
+}
+
+object proxy extends JavaModule {
+  override def millSourcePath = build.millSourcePath / "mockito-extensions" / "mockito-proxy"
+  def moduleDeps = Seq(core)
+}
+
+object subclass extends JavaModule {
+  override def millSourcePath = build.millSourcePath / "mockito-extensions" / "mockito-subclass"
+  def moduleDeps = Seq(core)
+}
