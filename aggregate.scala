@@ -187,10 +187,9 @@ object Aggregate:
       import org.jfree.chart.renderer.category.BarRenderer
       import org.jfree.data.category.DefaultCategoryDataset
 
-      // Build dataset — reversed so fastest is at top
-      val reversed = entries.reverse
+      // Build dataset — entries already sorted ascending (fastest first)
       val dataset = new DefaultCategoryDataset()
-      for e <- reversed do
+      for e <- entries do
         dataset.addValue(e.mean * 1000, "Mean", e.tool)
 
       // Create chart
@@ -220,7 +219,7 @@ object Aggregate:
       // Custom renderer with per-bar colors
       val renderer = new BarRenderer {
         override def getItemPaint(row: Int, column: Int): java.awt.Paint =
-          val tool = reversed(column).tool
+          val tool = entries(column).tool
           try hexToColor(ToolColors.get(tool))
           catch case _: Exception => java.awt.Color.GRAY
       }
@@ -305,19 +304,19 @@ object Aggregate:
          |  .charts { display: flex; flex-wrap: wrap; gap: 1rem; }
          |  figure { margin: 0; flex: 1 1 400px; }
          |  figure img { width: 100%; height: auto; border: 1px solid #eee; border-radius: 4px; }
-         |  figcaption { font-size: 0.85rem; color: #555; margin-top: 0.3rem; text-align: center; }
-         |  footer { margin-top: 2rem; font-size: 0.8rem; color: #999; }
-         |  </style>
-         |</head>
-         |<body>
-         |  <h1>JVM Build Tools Benchmark</h1>
-         |  <p>Compilation time comparison across build tools on real-world repos.
-         |     Each chart shows mean time (lower is better).</p>
-         |
-         |$sections
-         |
-         |  <footer>Generated $timestamp</footer>
-         |</body>
+          |  figcaption { font-size: 0.85rem; color: #555; margin-top: 0.3rem; text-align: center; }
+          |  .timestamp { font-size: 0.8rem; color: #999; }
+          |  </style>
+          |</head>
+          |<body>
+          |  <h1>JVM Build Tools Benchmark</h1>
+          |  <p>Compilation time comparison across build tools on real-world repos.
+          |     Each chart shows mean time (lower is better).</p>
+          |  <p><a href="https://github.com/sake92/jvm-build-tools-bench">View on GitHub</a></p>
+          |  <p class="timestamp">Generated $timestamp</p>
+          |
+          |$sections
+          |</body>
          |</html>
          |""".stripMargin
 
