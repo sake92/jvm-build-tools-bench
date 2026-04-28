@@ -6,12 +6,8 @@
 # tools:        one entry per (tool, repo) combination
 #
 # Fields in `hyperfine`:
-#   clean_compile.warmup       - unmeasured warmup runs before clean compile benchmark
-#   clean_compile.runs         - measured runs for clean compile benchmark
-#   incremental_compile.warmup - unmeasured warmup runs before incremental compile benchmark
-#   incremental_compile.runs   - measured runs for incremental compile benchmark
-#   test_all.warmup - unmeasured warmup runs before test benchmark
-#   test_all.runs   - measured runs for test benchmark
+#   benchmark_types.<name>.warmup - unmeasured warmup runs for the named benchmark type
+#   benchmark_types.<name>.runs   - measured runs for the named benchmark type
 #
 # Fields in `build_tools.<name>`:
 #   install  - how to install the tool on a fresh CI runner
@@ -22,26 +18,28 @@
 #   url     - git URL to clone
 #   ref     - branch, tag, or commit SHA to checkout
 #   setup   - optional shell command run once after cloning/updating (e.g. remove broken test files)
-#   build_tool_name     - build tool label used in result filenames and overlays; must match a key in build_tools
-#   repo                - matches a name in `repos`; combined with build_tool_name to form a unique benchmark id
-#   setup               - run once before hyperfine (download deps, warm daemon)
-#   compile_clean       - full clean + compile command measured by hyperfine
-#   compile_incremental - incremental compile command (after touching files)
-#   incremental_files   - files to `touch` before the incremental run
+#
+# Fields per tool entry:
+#   build_tool_name   - build tool label used in result filenames and overlays; must match a key in build_tools
+#   repo              - matches a name in `repos`; combined with build_tool_name to form a unique benchmark id
+#   setup             - run once before hyperfine (download deps, warm daemon)
+#   benchmarks.<name>.command      - shell command measured by hyperfine
+#   benchmarks.<name>.touch_files  - files to `touch` before the benchmark run (optional)
 #
 # Build file overlays: if build-files/<repo>/<tool>/ exists in this repo,
 # its contents are automatically copied into the cloned repo before benchmarking.
 
 hyperfine:
-  clean_compile:
-    warmup: 2
-    runs: 10
-  incremental_compile:
-    warmup: 1
-    runs: 10
-  test_all:
-    warmup: 1
-    runs: 10
+  benchmark_types:
+    compile-clean:
+      warmup: 2
+      runs: 10
+    compile-incremental:
+      warmup: 1
+      runs: 10
+    test:
+      warmup: 1
+      runs: 10
 
 build_tools:
   maven:
@@ -115,35 +113,47 @@ tools:
   - build_tool_name: maven
     repo: java-algorithms
     setup: "mvn dependency:resolve -q"
-    compile_clean: "mvn clean compile -q"
-    compile_incremental: "mvn compile -q"
-    incremental_files:
-      - src/main/java/com/thealgorithms/sorts/BubbleSort.java
-      - src/main/java/com/thealgorithms/sorts/MergeSort.java
-    test_all: "mvn test -q -DforkCount=8 -DreuseForks=true"
+    benchmarks:
+      compile-clean:
+        command: "mvn clean compile -q"
+      compile-incremental:
+        command: "mvn compile -q"
+        touch_files:
+          - src/main/java/com/thealgorithms/sorts/BubbleSort.java
+          - src/main/java/com/thealgorithms/sorts/MergeSort.java
+      test:
+        command: "mvn test -q -DforkCount=8 -DreuseForks=true"
 
   # ── java-algorithms: Mill ───────────────────────────────────────────────────────────
   # build-files/java-algorithms/mill/ is copied over the cloned repo
   - build_tool_name: mill
     repo: java-algorithms
     setup: "mill __.compile"
-    compile_clean: "mill clean && mill __.compile"
-    compile_incremental: "mill __.compile"
-    incremental_files:
-      - src/main/java/com/thealgorithms/sorts/BubbleSort.java
-      - src/main/java/com/thealgorithms/sorts/MergeSort.java
-    test_all: "mill __.test"
+    benchmarks:
+      compile-clean:
+        command: "mill clean && mill __.compile"
+      compile-incremental:
+        command: "mill __.compile"
+        touch_files:
+          - src/main/java/com/thealgorithms/sorts/BubbleSort.java
+          - src/main/java/com/thealgorithms/sorts/MergeSort.java
+      test:
+        command: "mill __.test"
 
   # ── java-algorithms: Deder ───────────────────────────────────────────────────────────
   - build_tool_name: deder
     repo: java-algorithms
     setup: "deder exec -t compile"
-    compile_clean: "deder clean && deder exec -t compile"
-    compile_incremental: "deder exec -t compile"
-    incremental_files:
-      - src/main/java/com/thealgorithms/sorts/BubbleSort.java
-      - src/main/java/com/thealgorithms/sorts/MergeSort.java
-    test_all: "deder exec -t test"
+    benchmarks:
+      compile-clean:
+        command: "deder clean && deder exec -t compile"
+      compile-incremental:
+        command: "deder exec -t compile"
+        touch_files:
+          - src/main/java/com/thealgorithms/sorts/BubbleSort.java
+          - src/main/java/com/thealgorithms/sorts/MergeSort.java
+      test:
+        command: "deder exec -t test"
 
   # temp removed because it doesnt actually clean the cache
   # bloop files are stored somewhere globally ???
@@ -152,36 +162,48 @@ tools:
   #- build_tool_name: bleep
   #  repo: java-algorithms
   #  setup: "bleep compile algorithms-test"
-  #  compile_clean: "bleep clean && bleep compile algorithms"
-  #  compile_incremental: "bleep compile algorithms"
-  #  incremental_files:
-  #    - src/main/java/com/thealgorithms/sorts/BubbleSort.java
-  #    - src/main/java/com/thealgorithms/sorts/MergeSort.java
-  #  test_all: "bleep test algorithms-test"
+  #  benchmarks:
+  #    compile-clean:
+  #      command: "bleep clean && bleep compile algorithms"
+  #    compile-incremental:
+  #      command: "bleep compile algorithms"
+  #      touch_files:
+  #        - src/main/java/com/thealgorithms/sorts/BubbleSort.java
+  #        - src/main/java/com/thealgorithms/sorts/MergeSort.java
+  #    test:
+  #      command: "bleep test algorithms-test"
 
   # ── java-algorithms: sbt ────────────────────────────────────────────────────────────
   # build-files/java-algorithms/sbt/ is copied over the cloned repo
   - build_tool_name: sbt
     repo: java-algorithms
     setup: "sbt --client compile"
-    compile_clean: "sbt --client 'clean; test:clean; compile; test:compile'"
-    compile_incremental: "sbt --client compile"
-    incremental_files:
-      - src/main/java/com/thealgorithms/sorts/BubbleSort.java
-      - src/main/java/com/thealgorithms/sorts/MergeSort.java
-    test_all: "sbt --client test"
+    benchmarks:
+      compile-clean:
+        command: "sbt --client 'clean; test:clean; compile; test:compile'"
+      compile-incremental:
+        command: "sbt --client compile"
+        touch_files:
+          - src/main/java/com/thealgorithms/sorts/BubbleSort.java
+          - src/main/java/com/thealgorithms/sorts/MergeSort.java
+      test:
+        command: "sbt --client test"
 
   # ── java-algorithms: sbt2 ───────────────────────────────────────────────────────────
   # build-files/java-algorithms/sbt2/ is copied over the cloned repo (sbt 2.0.0-RC12)
   - build_tool_name: sbt2
     repo: java-algorithms
     setup: "sbt --client compile"
-    compile_clean: "sbt --client 'clean; Test/clean; compile; Test/compile'"
-    compile_incremental: "sbt --client compile"
-    incremental_files:
-      - src/main/java/com/thealgorithms/sorts/BubbleSort.java
-      - src/main/java/com/thealgorithms/sorts/MergeSort.java
-    test_all: "sbt --client test"
+    benchmarks:
+      compile-clean:
+        command: "sbt --client 'clean; Test/clean; compile; Test/compile'"
+      compile-incremental:
+        command: "sbt --client compile"
+        touch_files:
+          - src/main/java/com/thealgorithms/sorts/BubbleSort.java
+          - src/main/java/com/thealgorithms/sorts/MergeSort.java
+      test:
+        command: "sbt --client test"
 
   ######### scala-algorithms #########
   # ── scala-algorithms: sbt ───────────────────────────────────────────────────────────
@@ -191,13 +213,17 @@ tools:
       # scala version is old; use gsed on macOS, sed on Linux
       $(command -v gsed 2>/dev/null || echo sed) -i 's/scalaVersion := "2.13.6",/scalaVersion := "2.13.11",/g' build.sbt
       sbt --client compile
-    compile_clean: |
-      sbt --client 'clean; test:clean; compile; test:compile'
-    compile_incremental: "sbt --client compile"
-    incremental_files:
-      - src/main/scala/Sort/BubbleSort.scala
-      - src/main/scala/Sort/MergeSort.scala
-    test_all: "sbt --client test"
+    benchmarks:
+      compile-clean:
+        command: |
+          sbt --client 'clean; test:clean; compile; test:compile'
+      compile-incremental:
+        command: "sbt --client compile"
+        touch_files:
+          - src/main/scala/Sort/BubbleSort.scala
+          - src/main/scala/Sort/MergeSort.scala
+      test:
+        command: "sbt --client test"
 
   # ── scala-algorithms: sbt2 ──────────────────────────────────────────────────────────
   # build-files/scala-algorithms/sbt2/ is copied over the cloned repo (sbt 2.0.0-RC12)
@@ -207,48 +233,61 @@ tools:
       # scala version is old; use gsed on macOS, sed on Linux
       $(command -v gsed 2>/dev/null || echo sed) -i 's/scalaVersion := "2.13.6",/scalaVersion := "2.13.11",/g' build.sbt
       sbt --client compile
-    compile_clean: |
-      sbt --client 'clean; Test/clean; compile; Test/compile'
-    compile_incremental: "sbt --client compile"
-    incremental_files:
-      - src/main/scala/Sort/BubbleSort.scala
-      - src/main/scala/Sort/MergeSort.scala
-    test_all: "sbt --client test"
+    benchmarks:
+      compile-clean:
+        command: |
+          sbt --client 'clean; Test/clean; compile; Test/compile'
+      compile-incremental:
+        command: "sbt --client compile"
+        touch_files:
+          - src/main/scala/Sort/BubbleSort.scala
+          - src/main/scala/Sort/MergeSort.scala
+      test:
+        command: "sbt --client test"
 
   # ── scala-algorithms: Deder ───────────────────────────────────────────────────────────
   - build_tool_name: deder
     repo: scala-algorithms
     setup: "deder exec -t compile"
-    compile_clean: "deder clean && deder exec -t compile"
-    compile_incremental: "deder exec -t compile"
-    incremental_files:
-      - src/main/scala/Sort/BubbleSort.scala
-      - src/main/scala/Sort/MergeSort.scala
-    test_all: "deder exec -t testInMemory"
+    benchmarks:
+      compile-clean:
+        command: "deder clean && deder exec -t compile"
+      compile-incremental:
+        command: "deder exec -t compile"
+        touch_files:
+          - src/main/scala/Sort/BubbleSort.scala
+          - src/main/scala/Sort/MergeSort.scala
+      test:
+        command: "deder exec -t testInMemory"
 
   # ── scala-algorithms: Bleep ──────────────────────────────────────────────────────────
   # build-files/scala-algorithms/bleep/ is copied over the cloned repo
   #- build_tool_name: bleep
   #  repo: scala-algorithms
   #  setup: "bleep compile algorithms-test"
-  #  compile_clean: "bleep clean && bleep compile algorithms"
-  #  compile_incremental: "bleep compile algorithms"
-  #  incremental_files:
-  #    - src/main/scala/Sort/BubbleSort.scala
-  #    - src/main/scala/Sort/MergeSort.scala
-  #  test_all: "bleep test algorithms-test"
+  #  benchmarks:
+  #    compile-clean:
+  #      command: "bleep clean && bleep compile algorithms"
+  #    compile-incremental:
+  #      command: "bleep compile algorithms"
+  #      touch_files:
+  #        - src/main/scala/Sort/BubbleSort.scala
+  #        - src/main/scala/Sort/MergeSort.scala
+  #    test:
+  #      command: "bleep test algorithms-test"
 
   # ── scala-algorithms: Mill ──────────────────────────────────────────────────────────
   # build-files/scala-algorithms/mill/ is copied over the cloned repo
   - build_tool_name: mill
     repo: scala-algorithms
     setup: "mill __.compile"
-    compile_clean: "mill clean && mill __.compile"
-    compile_incremental: "mill __.compile"
-    incremental_files:
-      - src/main/scala/Sort/BubbleSort.scala
-      - src/main/scala/Sort/MergeSort.scala
-    test_all: "mill __.testLocal"
-
-
-
+    benchmarks:
+      compile-clean:
+        command: "mill clean && mill __.compile"
+      compile-incremental:
+        command: "mill __.compile"
+        touch_files:
+          - src/main/scala/Sort/BubbleSort.scala
+          - src/main/scala/Sort/MergeSort.scala
+      test:
+        command: "mill __.testLocal"
