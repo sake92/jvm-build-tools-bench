@@ -20,9 +20,10 @@ __pycache__/
 
 # ides
 .vscode/
+.idea
 
 # ai
 .opencode
-
+.claude
 
 
