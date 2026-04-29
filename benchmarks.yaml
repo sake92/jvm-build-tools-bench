@@ -307,25 +307,27 @@ tools:
 
   ######### mockito #########
   # ── mockito: Gradle (native) ──────────────────────────────────
+  # Old monorepo layout: root IS mockito-core (sources at src/main/java)
   - build_tool_name: gradle
     repo: mockito
     setup: "./gradlew tasks --no-build-cache -q || true"
     benchmarks:
       compile-single-module:
-        command: "./gradlew clean :mockito-core:compileJava --no-build-cache -q"
+        command: "./gradlew clean :compileJava --no-build-cache -q"
       compile-all-modules:
         command: "./gradlew clean compileJava --no-build-cache -q"
 
   # ── mockito: Mill ─────────────────────────────────────────────
   # build-files/mockito/mill/ is copied over the cloned repo
+  # Old monorepo layout: root module is `package` object (core sources at src/main/java)
   - build_tool_name: mill
     repo: mockito
     setup: "mill __.compile"
     benchmarks:
       compile-single-module:
-        command: "mill clean __ && mill mockito-core.compile"
+        command: "mill __.clean && mill _.compile"
       compile-all-modules:
-        command: "mill clean __ && mill __.compile"
+        command: "mill __.clean && mill __.compile"
 
   # ── mockito: Deder ────────────────────────────────────────────
   # build-files/mockito/deder/ is copied over the cloned repo

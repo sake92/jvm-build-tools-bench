@@ -94,13 +94,15 @@ local const mockitoAndroid = new JavaModule {
 //
 // The --add-exports flags come from both javacOptions (compilation) and
 // forkArgs (JVM runtime). Deder consolidates them into javacOptions.
+// NOTE: javaVersion is omitted because --release conflicts with --add-exports.
+// The errorprone module needs --add-exports to access JDK compiler internals.
+// Without --release, compilation uses the host JDK (which is ≥11 on CI).
 local const mockitoErrorprone = new JavaModule {
   id = "mockito-errorprone"
   root = "subprojects/errorprone"
   sources = new Listing {
     "src/main/java"
   }
-  javaVersion = "11"
   javacOptions = new Listing {
     "-encoding"
     "UTF-8"

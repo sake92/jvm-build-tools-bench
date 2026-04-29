@@ -133,10 +133,12 @@ object RunBench:
       val (warmup, runs) = sys.env.get("BENCH_SMOKE") match
         case Some("true" | "1") =>
           println(s">>> Smoke mode: overriding $benchmarkType " +
-            s"(warmup ${hfConfig.warmup}→0, runs ${hfConfig.runs}→2)")
+            s"(warmup ${hfConfig.warmup}→0, runs ${hfConfig.runs}→2, showOutput=true)")
           (0, 2)
         case _ =>
           (hfConfig.warmup, hfConfig.runs)
+
+      val isSmoke = sys.env.get("BENCH_SMOKE").exists(v => v == "true" || v == "1")
 
       runPhase(benchmarkType) {
         println()
@@ -151,7 +153,7 @@ object RunBench:
         }
 
         val outFile = repoResultsDir / s"${toolConfig.build_tool_name}-$benchmarkType.json"
-        Hyperfine.run(bm.command, warmup, runs, outFile, repoDir)
+        Hyperfine.run(bm.command, warmup, runs, outFile, repoDir, showOutput = isSmoke)
         println(s"  Results: $outFile")
         writtenFiles += outFile
       }

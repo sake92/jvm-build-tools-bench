@@ -150,7 +150,8 @@ object Hyperfine:
     runs: Int,
     outputJson: os.Path,
     workDir: os.Path,
-    timeoutMs: Long = 30 * 60 * 1000 // 30 minutes per scenario
+    timeoutMs: Long = 30 * 60 * 1000, // 30 minutes per scenario
+    showOutput: Boolean = false
   ): HyperfineResult =
     os.makeDir.all(outputJson / os.up)
     os.write.over(outputJson, "{}")
@@ -161,15 +162,14 @@ object Hyperfine:
       try os.remove(outputJson) catch case _ => ()
 
     val result = try
-      os.proc(
+      val args = Seq(
         "hyperfine",
-        "--show-output",
         "--shell", "bash",
         "--warmup", warmup.toString,
         "--runs", runs.toString,
-        "--export-json", outputJson.toString,
-        command
-      ).call(cwd = workDir, check = false, stdout = os.Inherit, stderr = os.Inherit, timeout = timeoutMs)
+        "--export-json", outputJson.toString
+      ) ++ (if showOutput then Seq("--show-output") else Seq.empty) :+ command
+      os.proc(args).call(cwd = workDir, check = false, stdout = os.Inherit, stderr = os.Inherit, timeout = timeoutMs)
     catch
       case e: Exception =>
         cleanupStub()
