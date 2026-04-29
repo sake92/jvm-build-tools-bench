@@ -316,17 +316,6 @@ tools:
       compile-all-modules:
         command: "./gradlew clean compileJava --no-build-cache -q"
 
-  # ── mockito: Maven ────────────────────────────────────────────
-  # build-files/mockito/maven/ is copied over the cloned repo
-  - build_tool_name: maven
-    repo: mockito
-    setup: "mvn dependency:resolve -pl mockito-core,mockito-junit-jupiter,mockito-proxy,mockito-subclass -q"
-    benchmarks:
-      compile-single-module:
-        command: "mvn clean compile -pl mockito-core -q"
-      compile-all-modules:
-        command: "mvn clean compile -q"
-
   # ── mockito: Mill ─────────────────────────────────────────────
   # build-files/mockito/mill/ is copied over the cloned repo
   - build_tool_name: mill
@@ -337,17 +326,6 @@ tools:
         command: "mill clean __ && mill mockito-core.compile"
       compile-all-modules:
         command: "mill clean __ && mill __.compile"
-
-  # ── mockito: sbt ──────────────────────────────────────────────
-  # build-files/mockito/sbt/ is copied over the cloned repo
-  - build_tool_name: sbt
-    repo: mockito
-    setup: "sbt --client compile"
-    benchmarks:
-      compile-single-module:
-        command: "sbt --client 'clean; mockitoCore/compile'"
-      compile-all-modules:
-        command: "sbt --client 'clean; compile'"
 
   # ── mockito: Deder ────────────────────────────────────────────
   # build-files/mockito/deder/ is copied over the cloned repo
