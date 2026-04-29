@@ -134,6 +134,10 @@ tools:
         touch_files:
           - src/main/java/com/thealgorithms/sorts/BubbleSort.java
           - src/main/java/com/thealgorithms/sorts/MergeSort.java
+          - src/main/java/com/thealgorithms/sorts/QuickSort.java
+          - src/main/java/com/thealgorithms/sorts/HeapSort.java
+          - src/main/java/com/thealgorithms/sorts/InsertionSort.java
+          - src/main/java/com/thealgorithms/sorts/SelectionSort.java
       test:
         command: "mvn test -q -DforkCount=8 -DreuseForks=true"
 
@@ -150,6 +154,10 @@ tools:
         touch_files:
           - src/main/java/com/thealgorithms/sorts/BubbleSort.java
           - src/main/java/com/thealgorithms/sorts/MergeSort.java
+          - src/main/java/com/thealgorithms/sorts/QuickSort.java
+          - src/main/java/com/thealgorithms/sorts/HeapSort.java
+          - src/main/java/com/thealgorithms/sorts/InsertionSort.java
+          - src/main/java/com/thealgorithms/sorts/SelectionSort.java
       test:
         command: "mill __.test"
 
@@ -165,6 +173,10 @@ tools:
         touch_files:
           - src/main/java/com/thealgorithms/sorts/BubbleSort.java
           - src/main/java/com/thealgorithms/sorts/MergeSort.java
+          - src/main/java/com/thealgorithms/sorts/QuickSort.java
+          - src/main/java/com/thealgorithms/sorts/HeapSort.java
+          - src/main/java/com/thealgorithms/sorts/InsertionSort.java
+          - src/main/java/com/thealgorithms/sorts/SelectionSort.java
       test:
         command: "deder exec -t test"
 
@@ -199,6 +211,10 @@ tools:
         touch_files:
           - src/main/java/com/thealgorithms/sorts/BubbleSort.java
           - src/main/java/com/thealgorithms/sorts/MergeSort.java
+          - src/main/java/com/thealgorithms/sorts/QuickSort.java
+          - src/main/java/com/thealgorithms/sorts/HeapSort.java
+          - src/main/java/com/thealgorithms/sorts/InsertionSort.java
+          - src/main/java/com/thealgorithms/sorts/SelectionSort.java
       test:
         command: "sbt --client test"
 
@@ -215,6 +231,10 @@ tools:
         touch_files:
           - src/main/java/com/thealgorithms/sorts/BubbleSort.java
           - src/main/java/com/thealgorithms/sorts/MergeSort.java
+          - src/main/java/com/thealgorithms/sorts/QuickSort.java
+          - src/main/java/com/thealgorithms/sorts/HeapSort.java
+          - src/main/java/com/thealgorithms/sorts/InsertionSort.java
+          - src/main/java/com/thealgorithms/sorts/SelectionSort.java
       test:
         command: "sbt --client test"
 
@@ -235,6 +255,10 @@ tools:
         touch_files:
           - src/main/scala/Sort/BubbleSort.scala
           - src/main/scala/Sort/MergeSort.scala
+          - src/main/scala/Sort/QuickSort.scala
+          - src/main/scala/Sort/HeapSort.scala
+          - src/main/scala/Sort/InsertionSort.scala
+          - src/main/scala/Sort/SelectionSort.scala
       test:
         command: "sbt --client test"
 
@@ -255,6 +279,10 @@ tools:
         touch_files:
           - src/main/scala/Sort/BubbleSort.scala
           - src/main/scala/Sort/MergeSort.scala
+          - src/main/scala/Sort/QuickSort.scala
+          - src/main/scala/Sort/HeapSort.scala
+          - src/main/scala/Sort/InsertionSort.scala
+          - src/main/scala/Sort/SelectionSort.scala
       test:
         command: "sbt --client test"
 
@@ -270,6 +298,10 @@ tools:
         touch_files:
           - src/main/scala/Sort/BubbleSort.scala
           - src/main/scala/Sort/MergeSort.scala
+          - src/main/scala/Sort/QuickSort.scala
+          - src/main/scala/Sort/HeapSort.scala
+          - src/main/scala/Sort/InsertionSort.scala
+          - src/main/scala/Sort/SelectionSort.scala
       test:
         command: "deder exec -t testInMemory"
 
@@ -302,6 +334,10 @@ tools:
         touch_files:
           - src/main/scala/Sort/BubbleSort.scala
           - src/main/scala/Sort/MergeSort.scala
+          - src/main/scala/Sort/QuickSort.scala
+          - src/main/scala/Sort/HeapSort.scala
+          - src/main/scala/Sort/InsertionSort.scala
+          - src/main/scala/Sort/SelectionSort.scala
       test:
         command: "mill __.testLocal"
 
