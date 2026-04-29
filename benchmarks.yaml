@@ -120,6 +120,10 @@ repos:
     url: https://github.com/mockito/mockito
     ref: 97f3574cc07fdf36f1f76ba7332ac57675e140b1  # old monorepo layout with subprojects/
 
+  - name: cats
+    url: https://github.com/typelevel/cats
+    ref: be4a99d885dbac0d99ef64aa896103956ffd6272  # main @ 2026-04-29
+
 tools:
   ######### java-algorithms #########
   # ── java-algorithms: Maven ──────────────────────────────────────────────────────────
@@ -225,7 +229,7 @@ tools:
     setup: "sbt --client compile"
     benchmarks:
       compile-clean:
-        command: "sbt --client 'clean; Test/clean; compile; Test/compile'"
+        command: "sbt --client 'clean; cleanFull; Test/clean; compile; Test/compile'"
       compile-incremental:
         command: "sbt --client compile"
         touch_files:
@@ -244,7 +248,10 @@ tools:
     repo: scala-algorithms
     setup: |
       # scala version is old; use gsed on macOS, sed on Linux
-      $(command -v gsed 2>/dev/null || echo sed) -i 's/scalaVersion := "2.13.6",/scalaVersion := "2.13.11",/g' build.sbt
+      SED=$(command -v gsed 2>/dev/null || echo sed)
+      $SED -i 's/scalaVersion := "2.13.6",/scalaVersion := "2.13.11",/g' build.sbt
+      # disable scalafmtOnCompile so benchmarks measure pure compilation
+      $SED -i 's/scalafmtOnCompile := true/scalafmtOnCompile := false/g' build.sbt
       sbt --client compile
     benchmarks:
       compile-clean:
@@ -268,12 +275,15 @@ tools:
     repo: scala-algorithms
     setup: |
       # scala version is old; use gsed on macOS, sed on Linux
-      $(command -v gsed 2>/dev/null || echo sed) -i 's/scalaVersion := "2.13.6",/scalaVersion := "2.13.11",/g' build.sbt
+      SED=$(command -v gsed 2>/dev/null || echo sed)
+      $SED -i 's/scalaVersion := "2.13.6",/scalaVersion := "2.13.11",/g' build.sbt
+      # disable scalafmtOnCompile so benchmarks measure pure compilation
+      $SED -i 's/scalafmtOnCompile := true/scalafmtOnCompile := false/g' build.sbt
       sbt --client compile
     benchmarks:
       compile-clean:
         command: |
-          sbt --client 'clean; Test/clean; compile; Test/compile'
+          sbt --client 'clean; cleanFull; Test/clean; compile; Test/compile'
       compile-incremental:
         command: "sbt --client compile"
         touch_files:
@@ -375,3 +385,26 @@ tools:
         command: "deder clean && deder exec -t compile -m mockito-core"
       compile-all-modules:
         command: "deder clean && deder exec -t compile"
+
+  ######### cats #########
+  # ── cats: sbt ─────────────────────────────────────────────────
+  # build-files/cats/sbt/ is copied over the cloned repo (JVM + Scala 3 only, no plugins)
+  - build_tool_name: sbt
+    repo: cats
+    setup: "sbt --client compile"
+    benchmarks:
+      compile-single-module:
+        command: "sbt --client 'clean; core/compile'"
+      compile-all-modules:
+        command: "sbt --client 'clean; compile'"
+
+  # ── cats: sbt2 ────────────────────────────────────────────────
+  # build-files/cats/sbt2/ is copied over the cloned repo (sbt 2.0.0-RC12)
+  - build_tool_name: sbt2
+    repo: cats
+    setup: "sbt --client compile"
+    benchmarks:
+      compile-single-module:
+        command: "sbt --client 'clean; cleanFull; core/compile'"
+      compile-all-modules:
+        command: "sbt --client 'clean; cleanFull; compile'"

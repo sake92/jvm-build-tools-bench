@@ -76,6 +76,27 @@ jobs:
             --benchmark "${{ matrix.benchmark }}" \
             --results-dir results/ \
             --repos-dir "${{ runner.temp }}/bench-repos"
+      - name: Dump build-tool logs on failure
+        if: failure()
+        run: |
+          set +e
+          REPO_ROOT="${{ runner.temp }}/bench-repos"
+          echo "::group::Log file inventory"
+          find "$REPO_ROOT" ~/.sbt ~/.config/sbt /tmp -maxdepth 8 \
+            \( -name '*.log' -o -name 'sbt-*.log' -o -name 'server.log' -o -name 'last.log' \) \
+            -type f 2>/dev/null | tee /tmp/_logfiles.txt
+          echo "::endgroup::"
+          while IFS= read -r f; do
+            echo "::group::$f"
+            tail -c 200000 "$f"
+            echo
+            echo "::endgroup::"
+          done < /tmp/_logfiles.txt
+          echo "::group::sbt server sockets / pid files"
+          find ~/.config/sbt /tmp -maxdepth 6 \
+            \( -name 'sock' -o -name '*.pid' -o -name 'port.json' -o -name 'portfile' \) \
+            2>/dev/null | xargs -I{} sh -c 'echo "--- {} ---"; ls -la "{}"; file "{}" 2>/dev/null; cat "{}" 2>/dev/null; echo'
+          echo "::endgroup::"
       - name: Upload results
         uses: actions/upload-artifact@v4
         if: always()   # upload even on partial failure
