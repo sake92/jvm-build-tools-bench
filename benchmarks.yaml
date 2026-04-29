@@ -53,7 +53,7 @@ build_tools:
     shutdown: ""
   mill:
     install: |
-      curl -L https://repo1.maven.org/maven2/com/lihaoyi/mill-dist/1.1.2/mill-dist-1.1.2-mill.sh -o mill
+      curl -L https://repo1.maven.org/maven2/com/lihaoyi/mill-dist/1.1.5/mill-dist-1.1.5-mill.sh -o mill
       chmod +x mill
       sudo mv mill /usr/local/bin/mill
     shutdown: "mill shutdown || true"
