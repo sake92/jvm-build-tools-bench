@@ -248,7 +248,10 @@ tools:
     repo: scala-algorithms
     setup: |
       # scala version is old; use gsed on macOS, sed on Linux
-      $(command -v gsed 2>/dev/null || echo sed) -i 's/scalaVersion := "2.13.6",/scalaVersion := "2.13.11",/g' build.sbt
+      SED=$(command -v gsed 2>/dev/null || echo sed)
+      $SED -i 's/scalaVersion := "2.13.6",/scalaVersion := "2.13.11",/g' build.sbt
+      # disable scalafmtOnCompile so benchmarks measure pure compilation
+      $SED -i 's/scalafmtOnCompile := true/scalafmtOnCompile := false/g' build.sbt
       sbt --client compile
     benchmarks:
       compile-clean:
@@ -272,7 +275,10 @@ tools:
     repo: scala-algorithms
     setup: |
       # scala version is old; use gsed on macOS, sed on Linux
-      $(command -v gsed 2>/dev/null || echo sed) -i 's/scalaVersion := "2.13.6",/scalaVersion := "2.13.11",/g' build.sbt
+      SED=$(command -v gsed 2>/dev/null || echo sed)
+      $SED -i 's/scalaVersion := "2.13.6",/scalaVersion := "2.13.11",/g' build.sbt
+      # disable scalafmtOnCompile so benchmarks measure pure compilation
+      $SED -i 's/scalafmtOnCompile := true/scalafmtOnCompile := false/g' build.sbt
       sbt --client compile
     benchmarks:
       compile-clean:
