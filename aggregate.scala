@@ -257,6 +257,12 @@ object Aggregate:
          |  <h1>JVM Build Tools Benchmark</h1>
          |  <p>Compilation time comparison across build tools on real-world repos.
          |     Each chart shows mean time (lower is better).</p>
+         |  <p style="background:#fff3cd;border:1px solid #ffc107;border-radius:6px;padding:0.75rem 1rem;font-size:0.9rem;">
+         |    ⚠️ <strong>Disclaimer:</strong> The build files used across different tools are not guaranteed to be
+         |    100% equivalent. They are maintained on a <strong>best-effort basis</strong> — differences in
+         |    compiler settings, dependency resolution, plugin configurations, or module structure can affect
+         |    timing comparisons. Treat results as indicative rather than definitive.
+         |  </p>
          |  <p><a href="https://github.com/sake92/jvm-build-tools-bench">View on GitHub</a></p>
          |  <p class="timestamp">Generated $timestamp</p>
          |

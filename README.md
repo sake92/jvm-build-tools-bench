@@ -4,6 +4,8 @@
 
 Benchmarks comparing JVM build tools (Maven, Gradle, Mill, bleep, sbt, …) on real-world open-source repositories using [hyperfine](https://github.com/sharkdp/hyperfine).
 
+> ⚠️ **Disclaimer:** The build files used across different tools are not guaranteed to be 100% equivalent. They are maintained on a best-effort basis — differences in compiler settings, dependency resolution, plugin configurations, or module structure can affect timing comparisons. Treat results as indicative rather than definitive.
+
 Multiple benchmark types are measured per tool — each defined in `benchmarks.yaml` as a named entry under `hyperfine.benchmark_types`. Typical types include:
 
 | Benchmark type | Description |
