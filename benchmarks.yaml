@@ -118,7 +118,7 @@ repos:
 
   - name: mockito
     url: https://github.com/mockito/mockito
-    ref: a231205b240e7884a63bf0f63440012867a4da21  # v5.23.0
+    ref: 97f3574cc07fdf36f1f76ba7332ac57675e140b1  # old monorepo layout with subprojects/
 
 tools:
   ######### java-algorithms #########

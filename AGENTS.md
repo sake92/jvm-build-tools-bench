@@ -32,7 +32,7 @@ When adding a new overlay:
 
 ## Mockito repo layout
 
-The cloned mockito v5.23.0 uses the **upstream monorepo layout**:
+The cloned mockito (commit 97f3574c, old monorepo layout) uses:
 - Root module sources: `src/main/java/`
 - Subproject sources: `subprojects/<name>/src/main/java/`
 - Build files are placed at the repo root and reference these paths directly
