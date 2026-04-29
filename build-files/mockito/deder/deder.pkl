@@ -1,8 +1,10 @@
 amends "https://sake92.github.io/deder/config/v0.7.0/DederProject.pkl"
 
-local const javacOptions = new Listing {
-  "-source" "11"
-  "-target" "11"
+local const _javacOptions = new Listing {
+  "-source"
+  "11"
+  "-target"
+  "11"
 }
 
 local const core = new JavaModule {
@@ -14,9 +16,12 @@ local const core = new JavaModule {
   deps {
     "net.bytebuddy:byte-buddy:1.17.7"
     "net.bytebuddy:byte-buddy-agent:1.17.7"
+    "junit:junit:4.13.2"
+    "org.hamcrest:hamcrest-core:3.0"
     "org.objenesis:objenesis:3.3"
+    "org.jspecify:jspecify:1.0.0"
   }
-  javacOptions = javacOptions
+  javacOptions = _javacOptions
 }
 
 local const junitjupiter = new JavaModule {
@@ -29,7 +34,7 @@ local const junitjupiter = new JavaModule {
   deps {
     "org.junit.jupiter:junit-jupiter-api:5.13.4"
   }
-  javacOptions = javacOptions
+  javacOptions = _javacOptions
 }
 
 local const proxy = new JavaModule {
@@ -39,7 +44,7 @@ local const proxy = new JavaModule {
     "src/main/java"
   }
   moduleDeps { core }
-  javacOptions = javacOptions
+  javacOptions = _javacOptions
 }
 
 local const subclass = new JavaModule {
@@ -49,7 +54,7 @@ local const subclass = new JavaModule {
     "src/main/java"
   }
   moduleDeps { core }
-  javacOptions = javacOptions
+  javacOptions = _javacOptions
 }
 
 modules {

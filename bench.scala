@@ -163,6 +163,7 @@ object Hyperfine:
     val result = try
       os.proc(
         "hyperfine",
+        "--show-output",
         "--shell", "bash",
         "--warmup", warmup.toString,
         "--runs", runs.toString,
