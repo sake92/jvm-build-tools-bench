@@ -1,26 +1,55 @@
 amends "https://sake92.github.io/deder/config/v0.7.0/DederProject.pkl"
 
 // Translated from build-files/mockito/mill/build.mill
-// Test-only modules are skipped currently
+//
+// Deder limitations noted inline:
+//   - Custom resource generation (MockMethodDispatcher.class -> .raw) not supported
+//   - Source file filtering (flaky test exclusion) not supported
+//   - Dynamic classpath (-Xbootclasspath/a) not supported — worked around via auto-service
 
-local const _versions = new Mapping<String, String> {
-  ["bytebuddy"] = "1.14.18"
-  ["junitJupiter"] = "5.10.3"
-  ["errorprone"] = "2.23.0"
+// ══════════════════════════════════════════════════════════════════════════════
+// Shared versions — compile-time safe typed class (not Mapping<String, String>)
+// ══════════════════════════════════════════════════════════════════════════════
+
+local const _versions = new {
+  bytebuddy = "1.14.18"
+  junitJupiter = "5.10.3"
+  errorprone = "2.23.0"
+  junit = "4.13.2"
+  assertj = "3.26.3"
+  hamcrest = "2.2"
+  junitInterface = "0.13.2"
+  junitPlatformLauncher = "1.10.3"
+  objenesis = "3.3"
+  opentest4j = "1.3.0"
+  autoService = "1.1.1"
 }
+
+// ══════════════════════════════════════════════════════════════════════════════
+// Shared helpers
+// ══════════════════════════════════════════════════════════════════════════════
 
 local const _javacOptions = new Listing {
   "-encoding"
   "UTF-8"
 }
 
+// Inherited test dependencies from Mill's MockitoModule.test.
+// Every test object gets these automatically via the trait's test.mvnDeps.
+local const _baseTestDeps = new {
+  hamcrest = "org.hamcrest:hamcrest-core:\(_versions.hamcrest)"
+  junit = "junit:junit:\(_versions.junit)"
+  bytebuddyAgent = "net.bytebuddy:byte-buddy-agent:\(_versions.bytebuddy)"
+  junitInterface = "com.github.sbt:junit-interface:\(_versions.junitInterface)"
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// Production modules (compiled by `deder exec -t compile`)
+// ══════════════════════════════════════════════════════════════════════════════
+
 // NOTE: Mill copies MockMethodDispatcher.class from compile output into
 // resources/ as MockMethodDispatcher.raw (a custom resource generation task).
 // Deder does not support custom resource generation — this step is skipped.
-//
-// NOTE: Mill's testFilteredSources excludes
-//   src/test/java/org/mockitousage/debugging/StubbingLookupListenerCallbackTest.java
-// (flaky test). Deder has no source filtering, skipped.
 local const mockitoCore = new JavaModule {
   id = "mockito-core"
   root = "."
@@ -33,13 +62,13 @@ local const mockitoCore = new JavaModule {
   // Mill separates compileMvnDeps and mvnDeps; Deder combines them into `deps`.
   deps {
     // compileMvnDeps (from Mill):
-    "org.hamcrest:hamcrest-core:2.2"
-    "junit:junit:4.13.2"
-    "net.bytebuddy:byte-buddy-agent:\(_versions["bytebuddy"])"
-    "net.bytebuddy:byte-buddy:\(_versions["bytebuddy"])"
-    "org.opentest4j:opentest4j:1.3.0"
+    "org.hamcrest:hamcrest-core:\(_versions.hamcrest)"
+    "junit:junit:\(_versions.junit)"
+    "net.bytebuddy:byte-buddy-agent:\(_versions.bytebuddy)"
+    "net.bytebuddy:byte-buddy:\(_versions.bytebuddy)"
+    "org.opentest4j:opentest4j:\(_versions.opentest4j)"
     // mvnDeps (from Mill):
-    "org.objenesis:objenesis:3.3"
+    "org.objenesis:objenesis:\(_versions.objenesis)"
   }
 }
 
@@ -55,15 +84,13 @@ local const mockitoAndroid = new JavaModule {
     mockitoCore
   }
   deps {
-    "net.bytebuddy:byte-buddy-android:\(_versions["bytebuddy"])"
+    "net.bytebuddy:byte-buddy-android:\(_versions.bytebuddy)"
   }
 }
 
-// NOTE: Mill's forkArgs includes
-//   -Xbootclasspath/a:${configurations.errorproneJavac.asPath}
-// which resolves a configuration path dynamically — not directly
-// supported in Deder. Skipped. Errorprone annotation processing relies
-// on auto-service for service loader registration.
+// NOTE: Mill's forkArgs includes -Xbootclasspath/a:${configurations.errorproneJavac.asPath}
+// which resolves a configuration path dynamically — not directly supported in Deder.
+// Errorprone annotation processing relies on auto-service for service loader registration.
 //
 // The --add-exports flags come from both javacOptions (compilation) and
 // forkArgs (JVM runtime). Deder consolidates them into javacOptions.
@@ -94,42 +121,19 @@ local const mockitoErrorprone = new JavaModule {
   }
   deps {
     // compileMvnDeps (from Mill):
-    "com.google.auto.service:auto-service:1.1.1"
+    "com.google.auto.service:auto-service:\(_versions.autoService)"
     // mvnDeps (from Mill):
-    "com.google.errorprone:error_prone_core:\(_versions["errorprone"])"
+    "com.google.errorprone:error_prone_core:\(_versions.errorprone)"
   }
   javacAnnotationProcessorDeps {
-    "com.google.auto.service:auto-service:1.1.1"
-  }
-}
-
-// NOTE: Mill's extTest has testModuleDeps = Seq(build.test) which depends
-// on the main module's test classes. Deder does not support cross-module
-// test class dependencies — skipped.
-//
-// NOTE: Mill's testRuntimeMvnDeps (JUnit engines, platform launcher) are
-// test-scoped in Deder and handled automatically by Deder's built-in test
-// framework support.
-// ═══════════════════════════════════════════════════════════════════════════════
-local const mockitoExttest = new JavaModule {
-  id = "mockito-exttest"
-  root = "subprojects/extTest"
-  sources = new Listing {
-    "src/main/java"
-  }
-  javaVersion = "11"
-  javacOptions = _javacOptions
-  moduleDeps {
-    mockitoCore
-    mockitoJunitJupiter
+    "com.google.auto.service:auto-service:\(_versions.autoService)"
   }
 }
 
 // NOTE: Mill's junit-jupiter uses a custom test framework
 // (com.github.sbt.junit.jupiter.api.JupiterFramework).
 // Deder includes JUnit 5 support by default in JavaTestModule, so
-// that is handled automatically if a test module were defined.
-// ═══════════════════════════════════════════════════════════════════════════════
+// that is handled automatically for any test module.
 local const mockitoJunitJupiter = new JavaModule {
   id = "mockito-junit-jupiter"
   root = "subprojects/junit-jupiter"
@@ -142,38 +146,311 @@ local const mockitoJunitJupiter = new JavaModule {
     mockitoCore
   }
   deps {
-    "org.junit.jupiter:junit-jupiter-api:\(_versions["junitJupiter"])"
+    "org.junit.jupiter:junit-jupiter-api:\(_versions.junitJupiter)"
   }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// Skipped Mill subprojects (test-only modules — no main sources to compile):
-//
-//   subprojects.inlineTest                         - only defines testModuleDeps + testMvnDeps
-//   subprojects.junitJupiterExtensionTest          - only defines testModuleDeps + testMvnDeps
-//   subprojects.junitJupiterInlineMockMakerExtensionTest - test-only
-//   subprojects.junitJupiterParallelTest           - test-only
-//   subprojects.memory-test                        - test-only
-//   subprojects.programmable-test                  - test-only
-//   subprojects.proxy                              - test-only
-//   subprojects.subclass                           - test-only
-//
-// These would be JavaTestModule instances in Deder. Since the benchmark
-// only runs `deder exec -t compile` (no test tasks) and these modules
-// contain no production source code, they are omitted.
-// ═══════════════════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════════════════
+// Test modules (compiled by `deder exec -t test`)
+// ══════════════════════════════════════════════════════════════════════════════
 
-// Also skipped from Mill's `subprojects`:
-//   java21-test    - commented out in Mill build; test-only
-//   osgi-test      - commented out in Mill build; complex OSGi bundle config
-//                    (custom manifests, bundle modules, test runtime bundles)
-//                    not supported in Deder
-// ═══════════════════════════════════════════════════════════════════════════════
+// Root test configuration. Mirrors Mill's `package.test`.
+// Needed by extTest's cross-module test dependency (testModuleDeps = Seq(build.test)).
+local const mockitoCoreTest = new JavaTestModule {
+  id = "mockito-core-test"
+  root = "."
+  sources = new Listing {
+    "src/test/java"
+  }
+  javaVersion = "11"
+  javacOptions = _javacOptions
+  moduleDeps {
+    mockitoCore
+  }
+  deps {
+    // From Mill's root.testMvnDeps:
+    "org.assertj:assertj-core:\(_versions.assertj)"
+    "org.junit.jupiter:junit-jupiter-api:\(_versions.junitJupiter)"
+    "org.junit.jupiter:junit-jupiter-params:\(_versions.junitJupiter)"
+    // From inherited MockitoModule.test.mvnDeps:
+    _baseTestDeps.hamcrest
+    _baseTestDeps.junit
+    _baseTestDeps.bytebuddyAgent
+    _baseTestDeps.junitInterface
+  }
+}
+
+// NOTE: subprojects/extTest has no src/main/java/ — only test sources.
+// Converted from JavaModule to JavaTestModule to match reality.
+// Depends on mockitoCoreTest for cross-module test class access
+// (Mill's testModuleDeps = Seq(build.test)).
+local const mockitoExttest = new JavaTestModule {
+  id = "mockito-exttest"
+  root = "subprojects/extTest"
+  sources = new Listing {
+    "src/test/java"
+  }
+  javaVersion = "11"
+  javacOptions = _javacOptions
+  moduleDeps {
+    mockitoCore
+    mockitoJunitJupiter
+    mockitoCoreTest
+  }
+  deps {
+    // From Mill's extTest.testMvnDeps:
+    "junit:junit:\(_versions.junit)"
+    "org.assertj:assertj-core:\(_versions.assertj)"
+    "org.junit.jupiter:junit-jupiter-api:\(_versions.junitJupiter)"
+    // From inherited MockitoModule.test.mvnDeps:
+    _baseTestDeps.hamcrest
+    _baseTestDeps.bytebuddyAgent
+    _baseTestDeps.junitInterface
+    // From Mill's extTest.testRuntimeMvnDeps:
+    "org.junit.jupiter:junit-jupiter-engine:\(_versions.junitJupiter)"
+    "org.junit.vintage:junit-vintage-engine:\(_versions.junitJupiter)"
+    "org.junit.platform:junit-platform-launcher:\(_versions.junitPlatformLauncher)"
+  }
+}
+
+// Mill subproject: inlineTest
+// Test-only module for inline mock maker tests (static mocks, final classes, etc.)
+// testModuleDeps = Seq(build), testMvnDeps = Seq(junit4, assertj)
+local const mockitoInlineTest = new JavaTestModule {
+  id = "mockito-inline-test"
+  root = "subprojects/inlineTest"
+  sources = new Listing {
+    "src/test/java"
+  }
+  javaVersion = "11"
+  javacOptions = _javacOptions
+  moduleDeps {
+    mockitoCore
+  }
+  deps {
+    "junit:junit:\(_versions.junit)"
+    "org.assertj:assertj-core:\(_versions.assertj)"
+    _baseTestDeps.hamcrest
+    _baseTestDeps.bytebuddyAgent
+    _baseTestDeps.junitInterface
+  }
+}
+
+// Mill subproject: proxy
+// Has main resources (service-loader config) but no main Java sources.
+// testModuleDeps = Seq(build), testMvnDeps = Seq(junit4, assertj)
+local const mockitoProxy = new JavaTestModule {
+  id = "mockito-proxy"
+  root = "subprojects/proxy"
+  sources = new Listing {
+    "src/test/java"
+  }
+  resources = new Listing {
+    "src/main/resources"
+  }
+  javaVersion = "11"
+  javacOptions = _javacOptions
+  moduleDeps {
+    mockitoCore
+  }
+  deps {
+    "junit:junit:\(_versions.junit)"
+    "org.assertj:assertj-core:\(_versions.assertj)"
+    _baseTestDeps.hamcrest
+    _baseTestDeps.bytebuddyAgent
+    _baseTestDeps.junitInterface
+  }
+}
+
+// Mill subproject: subclass
+// Has main resources (service-loader config) but no main Java sources.
+// testModuleDeps = Seq(build), testMvnDeps = Seq(junit4, assertj)
+local const mockitoSubclass = new JavaTestModule {
+  id = "mockito-subclass"
+  root = "subprojects/subclass"
+  sources = new Listing {
+    "src/test/java"
+  }
+  resources = new Listing {
+    "src/main/resources"
+  }
+  javaVersion = "11"
+  javacOptions = _javacOptions
+  moduleDeps {
+    mockitoCore
+  }
+  deps {
+    "junit:junit:\(_versions.junit)"
+    "org.assertj:assertj-core:\(_versions.assertj)"
+    _baseTestDeps.hamcrest
+    _baseTestDeps.bytebuddyAgent
+    _baseTestDeps.junitInterface
+  }
+}
+
+// Mill subproject: memory-test
+// Memory/GC stress tests. testForkArgs = Seq("-Xmx128m").
+// testModuleDeps = Seq(build), testMvnDeps = Seq(assertj)
+local const mockitoMemoryTest = new JavaTestModule {
+  id = "mockito-memory-test"
+  root = "subprojects/memory-test"
+  sources = new Listing {
+    "src/test/java"
+  }
+  javaVersion = "11"
+  javacOptions = _javacOptions
+  jvmOptions = new Listing {
+    "-Xmx128m"
+  }
+  moduleDeps {
+    mockitoCore
+  }
+  deps {
+    "org.assertj:assertj-core:\(_versions.assertj)"
+    _baseTestDeps.hamcrest
+    _baseTestDeps.junit
+    _baseTestDeps.bytebuddyAgent
+    _baseTestDeps.junitInterface
+  }
+}
+
+// Mill subproject: programmatic-test
+// Tests for programmatic MockMaker configuration.
+// testModuleDeps = Seq(build), testMvnDeps = Seq(junit4, assertj)
+local const mockitoProgrammaticTest = new JavaTestModule {
+  id = "mockito-programmatic-test"
+  root = "subprojects/programmatic-test"
+  sources = new Listing {
+    "src/test/java"
+  }
+  javaVersion = "11"
+  javacOptions = _javacOptions
+  moduleDeps {
+    mockitoCore
+  }
+  deps {
+    "junit:junit:\(_versions.junit)"
+    "org.assertj:assertj-core:\(_versions.assertj)"
+    _baseTestDeps.hamcrest
+    _baseTestDeps.bytebuddyAgent
+    _baseTestDeps.junitInterface
+  }
+}
+
+// Mill subproject: junitJupiterExtensionTest
+// Tests for the JUnit Jupiter extension.
+// testFramework = JupiterFramework, testModuleDeps = Seq(junit-jupiter)
+// testMvnDeps = Seq(assertj, junitJupiterApi)
+// testRuntimeMvnDeps = Seq(junitJupiterEngine, junitPlatformLauncher, junit-interface)
+local const mockitoJunitJupiterExtensionTest = new JavaTestModule {
+  id = "mockito-junit-jupiter-extension-test"
+  root = "subprojects/junitJupiterExtensionTest"
+  sources = new Listing {
+    "src/test/java"
+  }
+  javaVersion = "11"
+  javacOptions = _javacOptions
+  moduleDeps {
+    mockitoJunitJupiter
+  }
+  deps {
+    "org.assertj:assertj-core:\(_versions.assertj)"
+    "org.junit.jupiter:junit-jupiter-api:\(_versions.junitJupiter)"
+    _baseTestDeps.hamcrest
+    _baseTestDeps.junit
+    _baseTestDeps.bytebuddyAgent
+    _baseTestDeps.junitInterface
+    "org.junit.jupiter:junit-jupiter-engine:\(_versions.junitJupiter)"
+    "org.junit.platform:junit-platform-launcher:\(_versions.junitPlatformLauncher)"
+  }
+}
+
+// Mill subproject: junitJupiterInlineMockMakerExtensionTest
+// Tests for JUnit Jupiter + inline mock maker combination.
+// Same structure as junitJupiterExtensionTest.
+local const mockitoJunitJupiterInlineMockTest = new JavaTestModule {
+  id = "mockito-junit-jupiter-inline-mock-test"
+  root = "subprojects/junitJupiterInlineMockMakerExtensionTest"
+  sources = new Listing {
+    "src/test/java"
+  }
+  javaVersion = "11"
+  javacOptions = _javacOptions
+  moduleDeps {
+    mockitoJunitJupiter
+  }
+  deps {
+    "org.assertj:assertj-core:\(_versions.assertj)"
+    "org.junit.jupiter:junit-jupiter-api:\(_versions.junitJupiter)"
+    _baseTestDeps.hamcrest
+    _baseTestDeps.junit
+    _baseTestDeps.bytebuddyAgent
+    _baseTestDeps.junitInterface
+    "org.junit.jupiter:junit-jupiter-engine:\(_versions.junitJupiter)"
+    "org.junit.platform:junit-platform-launcher:\(_versions.junitPlatformLauncher)"
+  }
+}
+
+// Mill subproject: junitJupiterParallelTest
+// Tests for parallel JUnit Jupiter execution.
+// testFramework = JupiterFramework, testModuleDeps = Seq(junit-jupiter)
+// testMvnDeps = Seq(junitJupiterApi)
+// testRuntimeMvnDeps = Seq(junitJupiterEngine, junitPlatformLauncher, junit-interface, bytebuddy)
+local const mockitoJunitJupiterParallelTest = new JavaTestModule {
+  id = "mockito-junit-jupiter-parallel-test"
+  root = "subprojects/junitJupiterParallelTest"
+  sources = new Listing {
+    "src/test/java"
+  }
+  javaVersion = "11"
+  javacOptions = _javacOptions
+  moduleDeps {
+    mockitoJunitJupiter
+  }
+  deps {
+    "org.junit.jupiter:junit-jupiter-api:\(_versions.junitJupiter)"
+    _baseTestDeps.hamcrest
+    _baseTestDeps.junit
+    _baseTestDeps.bytebuddyAgent
+    _baseTestDeps.junitInterface
+    "org.junit.jupiter:junit-jupiter-engine:\(_versions.junitJupiter)"
+    "org.junit.platform:junit-platform-launcher:\(_versions.junitPlatformLauncher)"
+    "net.bytebuddy:byte-buddy:\(_versions.bytebuddy)"
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// Skipped subprojects (not included because they are non-Java or have no
+// compilable sources in this layout):
+//
+//   subprojects.androidTest                 - Android instrumentation (Kotlin + Android SDK)
+//   subprojects.bom                         - Bill of materials (no sources)
+//   subprojects.groovyTest                  - Groovy test sources
+//   subprojects.groovyInlineTest            - Groovy test sources
+//   subprojects.java21-test                 - Java 21 only (commented out in Mill)
+//   subprojects.kotlinTest                  - Kotlin test sources
+//   subprojects.kotlinReleaseCoroutinesTest - Kotlin test sources
+//   subprojects.module-test                 - JPMS module tests (complex setup)
+//   subprojects.osgi-test                   - OSGi bundle tests (complex bundle config)
+//
+// ══════════════════════════════════════════════════════════════════════════════
 
 modules {
+  // Production modules (compiled by `deder exec -t compile`):
   mockitoCore
   mockitoAndroid
   mockitoErrorprone
-  mockitoExttest
   mockitoJunitJupiter
+
+  // Test modules (compiled by `deder exec -t test`):
+  mockitoCoreTest
+  mockitoExttest
+  mockitoInlineTest
+  mockitoProxy
+  mockitoSubclass
+  mockitoMemoryTest
+  mockitoProgrammaticTest
+  mockitoJunitJupiterExtensionTest
+  mockitoJunitJupiterInlineMockTest
+  mockitoJunitJupiterParallelTest
 }
