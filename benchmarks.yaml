@@ -334,9 +334,9 @@ tools:
     setup: "mill __.compile"
     benchmarks:
       compile-single-module:
-        command: "mill clean && mill core.compile"
+        command: "mill clean __ && mill mockito-core.compile"
       compile-all-modules:
-        command: "mill clean && mill __.compile"
+        command: "mill clean __ && mill __.compile"
 
   # ── mockito: sbt ──────────────────────────────────────────────
   # build-files/mockito/sbt/ is copied over the cloned repo

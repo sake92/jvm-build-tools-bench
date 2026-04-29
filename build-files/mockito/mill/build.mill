@@ -5,8 +5,7 @@ package build
 import mill.*
 import mill.javalib.*
 
-object core extends JavaModule {
-  override def millSourcePath = build.millSourcePath / "mockito-core"
+object `mockito-core` extends JavaModule {
   def mvnDeps = Seq(
     mvn"net.bytebuddy:byte-buddy:1.17.7",
     mvn"net.bytebuddy:byte-buddy-agent:1.17.7",
@@ -14,20 +13,17 @@ object core extends JavaModule {
   )
 }
 
-object junitjupiter extends JavaModule {
-  override def millSourcePath = build.millSourcePath / "mockito-extensions" / "mockito-junit-jupiter"
-  def moduleDeps = Seq(core)
-  def mvnDeps = Seq(
-    mvn"org.junit.jupiter:junit-jupiter-api:5.13.4",
-  )
-}
-
-object proxy extends JavaModule {
-  override def millSourcePath = build.millSourcePath / "mockito-extensions" / "mockito-proxy"
-  def moduleDeps = Seq(core)
-}
-
-object subclass extends JavaModule {
-  override def millSourcePath = build.millSourcePath / "mockito-extensions" / "mockito-subclass"
-  def moduleDeps = Seq(core)
+object `mockito-extensions` extends Module {
+  object `mockito-junit-jupiter` extends JavaModule {
+    def moduleDeps = Seq(`mockito-core`)
+    def mvnDeps = Seq(
+      mvn"org.junit.jupiter:junit-jupiter-api:5.13.4",
+    )
+  }
+  object `mockito-proxy` extends JavaModule {
+    def moduleDeps = Seq(`mockito-core`)
+  }
+  object `mockito-subclass` extends JavaModule {
+    def moduleDeps = Seq(`mockito-core`)
+  }
 }
