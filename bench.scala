@@ -29,7 +29,6 @@ case class BuildToolDef(
 
 case class ToolBenchmark(
   command: String,
-  prepare: Option[String] = None,
   touch_files: List[String] = Nil
 ) derives YamlDecoder
 
@@ -147,7 +146,6 @@ object Git:
 object Hyperfine:
   def run(
     command: String,
-    prepare: Option[String],
     warmup: Int,
     runs: Int,
     outputJson: os.Path,
@@ -158,9 +156,8 @@ object Hyperfine:
     os.makeDir.all(outputJson / os.up)
     os.write.over(outputJson, "{}")
 
-    val prepareDesc = prepare.fold("")(p => s", prepare=$p")
-    println(s">>> Running hyperfine (warmup=$warmup, runs=$runs, timeout=${timeoutMs/60000}m$prepareDesc): $command")
-
+    println(s">>> Running hyperfine (warmup=$warmup, runs=$runs, timeout=${timeoutMs/60000}m): $command")
+    
     def cleanupStub(): Unit =
       try os.remove(outputJson) catch case _ => ()
 
@@ -171,8 +168,7 @@ object Hyperfine:
         "--warmup", warmup.toString,
         "--runs", runs.toString,
         "--export-json", outputJson.toString
-      ) ++ prepare.toSeq.flatMap(p => Seq("--prepare", p))
-        ++ (if showOutput then Seq("--show-output") else Seq.empty) :+ command
+      ) ++ (if showOutput then Seq("--show-output") else Seq.empty) :+ command
       os.proc(args).call(cwd = workDir, check = false, stdout = os.Inherit, stderr = os.Inherit, timeout = timeoutMs)
     catch
       case e: Exception =>

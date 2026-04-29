@@ -229,7 +229,7 @@ tools:
     setup: "sbt --client compile"
     benchmarks:
       compile-clean:
-        command: "sbt --client 'clean; Test/clean; compile; Test/compile'"
+        command: "sbt --client 'clean; cleanFull; Test/clean; compile; Test/compile'"
       compile-incremental:
         command: "sbt --client compile"
         touch_files:
@@ -283,7 +283,7 @@ tools:
     benchmarks:
       compile-clean:
         command: |
-          sbt --client 'clean; Test/clean; compile; Test/compile'
+          sbt --client 'clean; cleanFull; Test/clean; compile; Test/compile'
       compile-incremental:
         command: "sbt --client compile"
         touch_files:
@@ -394,11 +394,9 @@ tools:
     setup: "sbt --client compile"
     benchmarks:
       compile-single-module:
-        prepare: "sbt --client clean"
-        command: "sbt --client core/compile"
+        command: "sbt --client 'clean; core/compile'"
       compile-all-modules:
-        prepare: "sbt --client clean"
-        command: "sbt --client compile"
+        command: "sbt --client 'clean; compile'"
 
   # ── cats: sbt2 ────────────────────────────────────────────────
   # build-files/cats/sbt2/ is copied over the cloned repo (sbt 2.0.0-RC12)
@@ -407,8 +405,6 @@ tools:
     setup: "sbt --client compile"
     benchmarks:
       compile-single-module:
-        prepare: "sbt --client 'clean; cleanFull'"
-        command: "sbt --client core/compile"
+        command: "sbt --client 'clean; cleanFull; core/compile'"
       compile-all-modules:
-        prepare: "sbt --client 'clean; cleanFull'"
-        command: "sbt --client compile"
+        command: "sbt --client 'clean; cleanFull; compile'"

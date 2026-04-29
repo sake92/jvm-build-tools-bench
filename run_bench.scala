@@ -153,7 +153,7 @@ object RunBench:
         }
 
         val outFile = repoResultsDir / s"${toolConfig.build_tool_name}-$benchmarkType.json"
-        Hyperfine.run(bm.command, bm.prepare, warmup, runs, outFile, repoDir, showOutput = isSmoke)
+        Hyperfine.run(bm.command, warmup, runs, outFile, repoDir, showOutput = isSmoke)
         println(s"  Results: $outFile")
         writtenFiles += outFile
       }
