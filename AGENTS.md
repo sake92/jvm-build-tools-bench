@@ -30,6 +30,25 @@ When adding a new overlay:
 2. Module IDs used in benchmark commands (`-m mockito-core` in Deder, `:mockito-core:compileJava` in Gradle) must match the build file's module names exactly
 3. Add the tool's chart color in `bench.scala` `ToolColors` map
 
+## Smoke test requirement
+
+**After making changes to any `build-files/<repo>/<tool>/` overlay or its benchmark commands in `benchmarks.yaml`, you MUST run a smoke test locally to verify it works before pushing.**
+
+```bash
+# Run a single smoke test (warmup=0, runs=2, --show-output enabled):
+BENCH_SMOKE=true scala-cli run run_bench.scala -- --benchmark <repo>-<tool>
+
+# Examples:
+BENCH_SMOKE=true scala-cli run run_bench.scala -- --benchmark mockito-deder
+BENCH_SMOKE=true scala-cli run run_bench.scala -- --benchmark mockito-mill
+BENCH_SMOKE=true scala-cli run run_bench.scala -- --benchmark mockito-gradle
+```
+
+- The tool must be installed locally (deder, mill, gradle) before running the smoke test.
+- All benchmark phases must complete successfully before the change is considered verified.
+- If a smoke test fails, fix the issue and re-run until it passes.
+- This mirrors the CI smoke validation that PRs go through.
+
 ## Mockito repo layout
 
 The cloned mockito (commit 97f3574c, old monorepo layout) uses:
