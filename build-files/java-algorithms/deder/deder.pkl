@@ -1,13 +1,10 @@
-amends "https://sake92.github.io/deder/config/v0.7.0/DederProject.pkl"
+amends "https://sake92.github.io/deder/config/v0.7.2/DederProject.pkl"
 
-local const algorithmsModules =
+local const _pair =
   new CreateJavaModules {
-    root = "src"
+    root = "."
+    layout = "maven"
     template = new JavaModule {
-      id = "algorithms"
-      sources = new Listing {
-        "main/java"
-      }
       deps {
         "org.apache.commons:commons-lang3:3.20.0"
         "org.apache.commons:commons-collections4:4.5.0"
@@ -15,9 +12,6 @@ local const algorithmsModules =
     }
     testTemplate = (template.asTest()) {
       testParallelism = 1
-      sources = new Listing {
-        "java"
-      }
       deps {
         "com.github.sbt.junit:jupiter-interface:0.16.0"
         "org.junit.jupiter:junit-jupiter:5.14.0"
@@ -28,6 +22,15 @@ local const algorithmsModules =
     }
   }.get
 
+local const algorithms = (_pair.main) {
+  id = "algorithms"
+}
+local const algorithmsTest = (_pair.test) {
+  id = "algorithms-test"
+  moduleDeps = new Listing { algorithms }
+}
+
 modules {
-  ...algorithmsModules.all
+  algorithms
+  algorithmsTest
 }
