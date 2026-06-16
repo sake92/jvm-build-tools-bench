@@ -1,0 +1,14 @@
+{
+  "repo": "cats",
+  "scenario": "compile-single-module",
+  "entries": [
+    {
+      "tool": "sbt",
+      "mean": 21.010279242740005,
+      "stddev": 1.145084515503521,
+      "min": 20.232290114740003,
+      "max": 24.150711595740002,
+      "median": 20.68901151374
+    }
+  ]
+}

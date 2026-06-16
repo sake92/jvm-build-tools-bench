@@ -32,9 +32,37 @@
     timing comparisons. Treat results as indicative rather than definitive.
   </p>
   <p><a href="https://github.com/sake92/jvm-build-tools-bench">View on GitHub</a></p>
-  <p class="timestamp">Generated 2026-06-16 14:49 UTC</p>
+  <p class="timestamp">Generated 2026-06-16 15:28 UTC</p>
 
   <details open>
+    <summary>cats</summary>
+    <div class="repo-body">
+      <div class="charts">
+      <figure>
+        <div class="chart-wrapper" style="height: 160px">
+          <canvas></canvas>
+        </div>
+        <script type="application/json">{"title":"Compile All Modules","repo":"cats","scenario":"compile-all-modules","entries":[{"tool":"sbt","mean":26.54174457044,"stddev":0.7723693690613532,"min":25.772939115739998,"max":27.99478294374,"median":26.11906126624},{"tool":"sbt2","mean":61.62612566227999,"stddev":1.1547039799947139,"min":59.95776452738,"max":63.28658634738,"median":61.58401025888}]}</script>
+        <figcaption>Compile All Modules
+          (<a href="cats/compile-all-modules/summary.json">json</a>,
+           <a href="cats/compile-all-modules/summary.md">md</a>)
+        </figcaption>
+      </figure>
+      <figure>
+        <div class="chart-wrapper" style="height: 150px">
+          <canvas></canvas>
+        </div>
+        <script type="application/json">{"title":"Compile Single Module","repo":"cats","scenario":"compile-single-module","entries":[{"tool":"sbt","mean":21.010279242740005,"stddev":1.145084515503521,"min":20.232290114740003,"max":24.150711595740002,"median":20.68901151374}]}</script>
+        <figcaption>Compile Single Module
+          (<a href="cats/compile-single-module/summary.json">json</a>,
+           <a href="cats/compile-single-module/summary.md">md</a>)
+        </figcaption>
+      </figure>
+
+      </div>
+    </div>
+  </details>
+  <details>
     <summary>java-algorithms</summary>
     <div class="repo-body">
       <div class="charts">
@@ -42,7 +70,7 @@
         <div class="chart-wrapper" style="height: 230px">
           <canvas></canvas>
         </div>
-        <script type="application/json">{"title":"Compile Clean","repo":"java-algorithms","scenario":"compile-clean","entries":[{"tool":"sbt","mean":4.6134954483,"stddev":0.3956485729542869,"min":4.1581608764,"max":5.4234782334,"median":4.5122059574},{"tool":"deder","mean":4.84626486764,"stddev":0.2705975295767277,"min":4.51455054954,"max":5.28419889154,"median":4.80722565454},{"tool":"mill","mean":5.80911504488,"stddev":0.29717596846296285,"min":5.46218141578,"max":6.40776092078,"median":5.70911022478},{"tool":"maven","mean":6.365207143580001,"stddev":0.12450507686927047,"min":6.17948337288,"max":6.51055913588,"median":6.39223255588}]}</script>
+        <script type="application/json">{"title":"Compile Clean","repo":"java-algorithms","scenario":"compile-clean","entries":[{"tool":"sbt","mean":4.80177664702,"stddev":0.5034326147763459,"min":4.26048468552,"max":5.76737424252,"median":4.60149919902},{"tool":"deder","mean":5.444198850699999,"stddev":0.32540265354059705,"min":5.0897988727,"max":5.9679421867,"median":5.3329840242},{"tool":"mill","mean":5.665704338980001,"stddev":0.29211864421347405,"min":5.36547712938,"max":6.17723660438,"median":5.56111082038},{"tool":"maven","mean":6.49532285514,"stddev":0.15112073280878713,"min":6.29283436334,"max":6.74114609534,"median":6.4854324513399995}]}</script>
         <figcaption>Compile Clean
           (<a href="java-algorithms/compile-clean/summary.json">json</a>,
            <a href="java-algorithms/compile-clean/summary.md">md</a>)
@@ -52,17 +80,17 @@
         <div class="chart-wrapper" style="height: 230px">
           <canvas></canvas>
         </div>
-        <script type="application/json">{"title":"Compile Incremental","repo":"java-algorithms","scenario":"compile-incremental","entries":[{"tool":"deder","mean":0.08575883190000001,"stddev":0.015825644167995322,"min":0.06919812030000001,"max":0.11319800930000001,"median":0.08325560580000002},{"tool":"sbt","mean":0.13445819273999998,"stddev":0.004745110827773196,"min":0.12977580454,"max":0.14372369254,"median":0.13301291104000001},{"tool":"mill","mean":0.20181487182000005,"stddev":0.023151476976287208,"min":0.17018155812000002,"max":0.22298210012000003,"median":0.21787092962000004},{"tool":"maven","mean":6.335267461780001,"stddev":0.13271333998428342,"min":5.984568518480001,"max":6.47490785248,"median":6.36349012498}]}</script>
+        <script type="application/json">{"title":"Compile Incremental","repo":"java-algorithms","scenario":"compile-incremental","entries":[{"tool":"deder","mean":0.09782602554000001,"stddev":0.02111981080742293,"min":0.07605016334000002,"max":0.13188561034000001,"median":0.09048205234000001},{"tool":"sbt","mean":0.12541071304,"stddev":0.009075254034736694,"min":0.11818194794,"max":0.14921297794,"median":0.12284530544000001},{"tool":"mill","mean":0.19430939540000006,"stddev":0.031215110453823264,"min":0.12729952160000002,"max":0.22114963160000004,"median":0.2095792381},{"tool":"maven","mean":6.413385816459998,"stddev":0.16810369593351704,"min":6.17191733626,"max":6.69778975126,"median":6.39306453376}]}</script>
         <figcaption>Compile Incremental
           (<a href="java-algorithms/compile-incremental/summary.json">json</a>,
            <a href="java-algorithms/compile-incremental/summary.md">md</a>)
         </figcaption>
       </figure>
       <figure>
-        <div class="chart-wrapper" style="height: 230px">
+        <div class="chart-wrapper" style="height: 195px">
           <canvas></canvas>
         </div>
-        <script type="application/json">{"title":"Test","repo":"java-algorithms","scenario":"test","entries":[{"tool":"deder","mean":24.93866280448,"stddev":2.274368874522557,"min":22.23611883298,"max":30.72731337998,"median":24.496821722980002},{"tool":"mill","mean":31.235808157060006,"stddev":1.1281029366831876,"min":29.972935771960003,"max":33.27836287196,"median":31.027061133460002},{"tool":"sbt","mean":41.09477997502,"stddev":0.9676609911774974,"min":39.961715161120004,"max":43.432086118120004,"median":40.96799194962},{"tool":"maven","mean":66.35380072678,"stddev":2.2523431798406763,"min":62.23969175178,"max":68.96399181078,"median":67.16813609028}]}</script>
+        <script type="application/json">{"title":"Test","repo":"java-algorithms","scenario":"test","entries":[{"tool":"deder","mean":26.449699921500002,"stddev":1.4813081782316027,"min":25.223447583200002,"max":29.2803132672,"median":25.7458483007},{"tool":"sbt","mean":40.114182839,"stddev":0.760427701489419,"min":39.2258267733,"max":41.3393524213,"median":40.0798705503},{"tool":"maven","mean":68.41656815580001,"stddev":2.210921804660631,"min":64.9413413474,"max":71.2317381854,"median":69.3730363729}]}</script>
         <figcaption>Test
           (<a href="java-algorithms/test/summary.json">json</a>,
            <a href="java-algorithms/test/summary.md">md</a>)
@@ -80,7 +108,7 @@
         <div class="chart-wrapper" style="height: 195px">
           <canvas></canvas>
         </div>
-        <script type="application/json">{"title":"Compile All Modules","repo":"mockito","scenario":"compile-all-modules","entries":[{"tool":"deder","mean":6.503169229679999,"stddev":0.5270438227257245,"min":5.89368748928,"max":7.68901376428,"median":6.43644219178},{"tool":"mill","mean":16.377769565719998,"stddev":0.2817224418297963,"min":16.00667563192,"max":17.02955694892,"median":16.32658353492},{"tool":"gradle","mean":16.91783221738,"stddev":0.39237579587119553,"min":16.37679411828,"max":17.58635876128,"median":16.86259355128}]}</script>
+        <script type="application/json">{"title":"Compile All Modules","repo":"mockito","scenario":"compile-all-modules","entries":[{"tool":"deder","mean":5.199215669920002,"stddev":0.3474578497461838,"min":4.888754795620001,"max":5.95747305162,"median":5.05038806162},{"tool":"gradle","mean":15.606484611400003,"stddev":0.2505881853441078,"min":15.3039470132,"max":16.1066502042,"median":15.5647574752},{"tool":"mill","mean":18.366758721700002,"stddev":0.7935143822326557,"min":16.846029755700002,"max":19.2351401837,"median":18.479259416700003}]}</script>
         <figcaption>Compile All Modules
           (<a href="mockito/compile-all-modules/summary.json">json</a>,
            <a href="mockito/compile-all-modules/summary.md">md</a>)
@@ -90,7 +118,7 @@
         <div class="chart-wrapper" style="height: 195px">
           <canvas></canvas>
         </div>
-        <script type="application/json">{"title":"Compile Single Module","repo":"mockito","scenario":"compile-single-module","entries":[{"tool":"deder","mean":1.4369093519200002,"stddev":0.03393786363312577,"min":1.39089013992,"max":1.4947789469200001,"median":1.4332506899200002},{"tool":"gradle","mean":11.18388126612,"stddev":0.24018204868299528,"min":10.77913066632,"max":11.605431099319999,"median":11.150131293320001},{"tool":"mill","mean":13.88798267084,"stddev":0.262769763951938,"min":13.382615000140001,"max":14.266301765140001,"median":13.92839361064}]}</script>
+        <script type="application/json">{"title":"Compile Single Module","repo":"mockito","scenario":"compile-single-module","entries":[{"tool":"deder","mean":1.1848623661800002,"stddev":0.019765717690258186,"min":1.16006933258,"max":1.22010656258,"median":1.1867228220800001},{"tool":"gradle","mean":10.202119929099998,"stddev":0.2225379348392063,"min":9.8604123151,"max":10.5493126711,"median":10.2181923256},{"tool":"mill","mean":15.51990125718,"stddev":0.442805740081627,"min":15.069004797180002,"max":16.34288147218,"median":15.326780625180001}]}</script>
         <figcaption>Compile Single Module
           (<a href="mockito/compile-single-module/summary.json">json</a>,
            <a href="mockito/compile-single-module/summary.md">md</a>)
@@ -108,7 +136,7 @@
         <div class="chart-wrapper" style="height: 230px">
           <canvas></canvas>
         </div>
-        <script type="application/json">{"title":"Compile Clean","repo":"scala-algorithms","scenario":"compile-clean","entries":[{"tool":"deder","mean":1.4977974362399997,"stddev":0.280353483629607,"min":1.16503901924,"max":2.0218521572399997,"median":1.44690581724},{"tool":"sbt","mean":1.53614295668,"stddev":0.26071658120416297,"min":1.16350246358,"max":1.98463526958,"median":1.46752874308},{"tool":"mill","mean":6.8378710881,"stddev":0.16718773065340528,"min":6.6065939494000006,"max":7.0240174254,"median":6.8596110084},{"tool":"sbt2","mean":7.140538823720002,"stddev":0.14160466850861822,"min":6.93196072772,"max":7.32560112972,"median":7.15089530022}]}</script>
+        <script type="application/json">{"title":"Compile Clean","repo":"scala-algorithms","scenario":"compile-clean","entries":[{"tool":"deder","mean":1.4756501048600001,"stddev":0.19389227273174986,"min":1.1787094029599998,"max":1.7936417009599999,"median":1.42399319046},{"tool":"sbt","mean":1.73366412366,"stddev":0.32558944335347584,"min":1.33901559396,"max":2.42861767796,"median":1.65220037596},{"tool":"sbt2","mean":6.762067347140001,"stddev":0.20232651634686746,"min":6.44555511774,"max":7.05075662074,"median":6.7557157622399995},{"tool":"mill","mean":8.04979356326,"stddev":0.13791278386558956,"min":7.75202714896,"max":8.189078352960001,"median":8.08560556446}]}</script>
         <figcaption>Compile Clean
           (<a href="scala-algorithms/compile-clean/summary.json">json</a>,
            <a href="scala-algorithms/compile-clean/summary.md">md</a>)
@@ -118,7 +146,7 @@
         <div class="chart-wrapper" style="height: 230px">
           <canvas></canvas>
         </div>
-        <script type="application/json">{"title":"Compile Incremental","repo":"scala-algorithms","scenario":"compile-incremental","entries":[{"tool":"deder","mean":0.024944794620000005,"stddev":0.004340231126644725,"min":0.01752871342,"max":0.03232071542000001,"median":0.023713551920000003},{"tool":"sbt2","mean":0.13823795222000002,"stddev":0.008142989234188582,"min":0.12548795462,"max":0.15109065062,"median":0.13919054662000002},{"tool":"sbt","mean":0.13963118922,"stddev":0.020998741820496943,"min":0.11853234952000001,"max":0.18939716152,"median":0.13216785801999997},{"tool":"mill","mean":0.19834225246,"stddev":0.028119807698477002,"min":0.16194094256000002,"max":0.22824709456000003,"median":0.21534037956000002}]}</script>
+        <script type="application/json">{"title":"Compile Incremental","repo":"scala-algorithms","scenario":"compile-incremental","entries":[{"tool":"deder","mean":0.023191837899999998,"stddev":0.0011734287679868582,"min":0.0213462823,"max":0.0247792153,"median":0.0230831843},{"tool":"sbt2","mean":0.13296296522,"stddev":0.01321655890305811,"min":0.12397512222000001,"max":0.16453000022000003,"median":0.12685408872},{"tool":"sbt","mean":0.13593819785999997,"stddev":0.013130054445482433,"min":0.12249581606000001,"max":0.16537742906,"median":0.13177391105999997},{"tool":"mill","mean":0.21297806432000002,"stddev":0.023262225212766073,"min":0.17686928222,"max":0.23024342922000002,"median":0.22555262872}]}</script>
         <figcaption>Compile Incremental
           (<a href="scala-algorithms/compile-incremental/summary.json">json</a>,
            <a href="scala-algorithms/compile-incremental/summary.md">md</a>)
@@ -128,7 +156,7 @@
         <div class="chart-wrapper" style="height: 230px">
           <canvas></canvas>
         </div>
-        <script type="application/json">{"title":"Test","repo":"scala-algorithms","scenario":"test","entries":[{"tool":"deder","mean":0.13774136464000003,"stddev":0.01619441457770803,"min":0.11342033674000002,"max":0.16106402174,"median":0.13958957974000002},{"tool":"sbt2","mean":0.21124383812000005,"stddev":0.014117135746251262,"min":0.19191216682,"max":0.23390627182,"median":0.21062286782},{"tool":"sbt","mean":0.53805555652,"stddev":0.32818563607376355,"min":0.38958639262,"max":1.46536286362,"median":0.43019246712000003},{"tool":"mill","mean":0.9335562101400001,"stddev":0.03256673087867424,"min":0.86759493474,"max":0.9851913127400002,"median":0.9389477247400001}]}</script>
+        <script type="application/json">{"title":"Test","repo":"scala-algorithms","scenario":"test","entries":[{"tool":"deder","mean":0.13703403762000002,"stddev":0.017783424471380805,"min":0.11640020022,"max":0.16315738022,"median":0.12885884722000002},{"tool":"sbt2","mean":0.20572223416000002,"stddev":0.010741518935400275,"min":0.19259570796,"max":0.22412202396,"median":0.20508004346000003},{"tool":"sbt","mean":0.48086806220000006,"stddev":0.046320484622730404,"min":0.44542078470000007,"max":0.5736228247,"median":0.46203172220000005},{"tool":"mill","mean":1.1008170049400001,"stddev":0.0465735519307052,"min":1.03826767504,"max":1.16419797304,"median":1.10727662004}]}</script>
         <figcaption>Test
           (<a href="scala-algorithms/test/summary.json">json</a>,
            <a href="scala-algorithms/test/summary.md">md</a>)
