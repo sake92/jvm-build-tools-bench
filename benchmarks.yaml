@@ -404,3 +404,18 @@ tools:
         command: "sbt --client 'clean; cleanFull; core/compile'"
       compile-all-modules:
         command: "sbt --client 'clean; cleanFull; compile'"
+  
+  # ── cats: deder ────────────────────────────────────────────────
+  # build-files/cats/deder/ is copied over the cloned repo (sbt 2.0.0-RC12)
+  - build_tool_name: deder
+    repo: cats
+    setup: |
+      # sbt generates some sources..
+      sbt compile
+      deder exec -t compile
+    benchmarks:
+      compile-single-module:
+        command: "deder clean && deder exec -t compile -m core"
+      compile-all-modules:
+        command: "deder clean && deder exec -t compile"
+  

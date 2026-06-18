@@ -1,0 +1,351 @@
+amends "https://sake92.github.io/deder/config/v0.19.4/DederProject.pkl"
+
+local const basePomSettings = new PomSettings {
+  groupId = "org.typelevel"
+  description = "cats"
+}
+
+local const kernel =
+  new CreateScalaModules {
+    root = "kernel"
+    id = "kernel"
+    layout = "sbt"
+    template = new ScalaModule {
+      scalaVersion = "3.3.7"
+      scalacOptions {
+        "-Ykind-projector"
+        "-source:3.0-migration"
+      }
+      sources { "target/scala-3.3.7/src_managed/main" }
+      deps {
+        "org.typelevel::scalac-compat-annotation:0.1.4"
+      }
+      pomSettings = (basePomSettings) {
+        artifactId = "cats-kernel"
+        version = "0.0.0-BENCH"
+      }
+    }
+    testTemplate = (template.asTest()) {
+      scalaVersion = "3.3.7"
+
+      deps {
+        "org.scalameta::munit:1.3.0"
+        "org.typelevel::discipline-munit:2.0.0"
+      }
+    }
+  }.get
+
+local const algebra =
+  new CreateScalaModules {
+    root = "algebra-core"
+    id = "algebra"
+    layout = "sbt"
+    template = new ScalaModule {
+      scalaVersion = "3.3.7"
+      scalacOptions {
+        "-Ykind-projector"
+        "-source:3.0-migration"
+      }
+      sources { "target/scala-3.3.7/src_managed/main" }
+      deps {
+        "org.typelevel::scalac-compat-annotation:0.1.4"
+      }
+      moduleDeps {
+        kernel.main
+      }
+      pomSettings = (basePomSettings) {
+        artifactId = "algebra"
+        version = "0.0.0-BENCH"
+      }
+    }
+    testTemplate = (template.asTest()) {
+      scalaVersion = "3.3.7"
+      deps {
+        "org.scalameta::munit:1.3.0"
+        "org.typelevel::discipline-munit:2.0.0"
+        "org.scalacheck::scalacheck:1.19.0"
+      }
+    }
+  }.get
+
+local const core =
+  new CreateScalaModules {
+    root = "core"
+    id = "core"
+    layout = "sbt"
+    template = new ScalaModule {
+      scalaVersion = "3.3.7"
+      scalacOptions {
+        "-Ykind-projector"
+        "-source:3.0-migration"
+      }
+      sources { "target/scala-3.3.7/src_managed/main" }
+      deps {
+        "org.typelevel::scalac-compat-annotation:0.1.4"
+      }
+      moduleDeps {
+        kernel.main
+      }
+      pomSettings = (basePomSettings) {
+        artifactId = "cats-core"
+        version = "0.0.0-BENCH"
+      }
+    }
+    testTemplate = (template.asTest()) {
+      scalaVersion = "3.3.7"
+      deps {
+        "org.scalameta::munit:1.3.0"
+        "org.typelevel::discipline-munit:2.0.0"
+        "org.scalacheck::scalacheck:1.19.0"
+      }
+    }
+  }.get
+
+local const kernelLaws =
+  new CreateScalaModules {
+    root = "kernel-laws"
+    id = "kernelLaws"
+    layout = "sbt"
+    template = new ScalaModule {
+      scalaVersion = "3.3.7"
+      scalacOptions {
+        "-Ykind-projector"
+        "-source:3.0-migration"
+      }
+      sources {
+        "shared/src/main/scala"
+        "jvm/src/main/scala"
+      }
+      deps {
+        "org.typelevel::scalac-compat-annotation:0.1.4"
+        "org.typelevel::discipline-core:1.7.0"
+      }
+      moduleDeps {
+        kernel.main
+      }
+      pomSettings = (basePomSettings) {
+        artifactId = "cats-kernel-laws"
+        version = "0.0.0-BENCH"
+      }
+    }
+    testTemplate = (template.asTest()) {
+      scalaVersion = "3.3.7"
+      deps {
+        "org.scalameta::munit:1.3.0"
+        "org.typelevel::discipline-munit:2.0.0"
+      }
+    }
+  }.get
+
+local const free =
+  new CreateScalaModules {
+    root = "free"
+    id = "free"
+    layout = "sbt"
+    template = new ScalaModule {
+      scalaVersion = "3.3.7"
+      scalacOptions {
+        "-Ykind-projector"
+        "-source:3.0-migration"
+      }
+      deps {
+        "org.typelevel::scalac-compat-annotation:0.1.4"
+      }
+      moduleDeps {
+        core.main
+        kernel.main
+      }
+      pomSettings = (basePomSettings) {
+        artifactId = "cats-free"
+        version = "0.0.0-BENCH"
+      }
+    }
+    testTemplate = (template.asTest()) {
+      scalaVersion = "3.3.7"
+      moduleDeps {
+        core.test
+        kernel.test
+      }
+    }
+  }.get
+
+local const alleycatsCore =
+  new CreateScalaModules {
+    root = "alleycats-core"
+    id = "alleycatsCore"
+    layout = "sbt"
+    template = new ScalaModule {
+      scalaVersion = "3.3.7"
+      scalacOptions {
+        "-Ykind-projector"
+        "-source:3.0-migration"
+      }
+      deps {
+        "org.typelevel::scalac-compat-annotation:0.1.4"
+      }
+      moduleDeps {
+        core.main
+      }
+      pomSettings = (basePomSettings) {
+        artifactId = "alleycats-core"
+        version = "0.0.0-BENCH"
+      }
+    }
+    testTemplate = (template.asTest()) {
+      scalaVersion = "3.3.7"
+      deps {}
+    }
+  }.get
+
+local const laws =
+  new CreateScalaModules {
+    root = "laws"
+    id = "laws"
+    layout = "sbt"
+    template = new ScalaModule {
+      scalaVersion = "3.3.7"
+      scalacOptions {
+        "-Ykind-projector"
+        "-source:3.0-migration"
+      }
+      deps {
+        "org.typelevel::scalac-compat-annotation:0.1.4"
+        "org.typelevel::discipline-core:1.7.0"
+      }
+      moduleDeps {
+        kernel.main
+        core.main
+        kernelLaws.main
+      }
+      pomSettings = (basePomSettings) {
+        artifactId = "cats-laws"
+        version = "0.0.0-BENCH"
+      }
+    }
+    testTemplate = (template.asTest()) {
+      scalaVersion = "3.3.7"
+      deps {
+        "org.scalameta::munit:1.3.0"
+        "org.typelevel::discipline-munit:2.0.0"
+      }
+    }
+  }.get
+
+local const algebraLaws =
+  new CreateScalaModules {
+    root = "algebra-laws"
+    id = "algebraLaws"
+    layout = "sbt"
+    template = new ScalaModule {
+      scalaVersion = "3.3.7"
+      scalacOptions {
+        "-Ykind-projector"
+        "-source:3.0-migration"
+      }
+      sources {
+        "jvm/src/main/scala"
+        "shared/src/main/scala"
+      }
+      deps {
+        "org.typelevel::scalac-compat-annotation:0.1.4"
+        "org.typelevel::discipline-core:1.7.0"
+      }
+      moduleDeps {
+        kernelLaws.main
+        algebra.main
+      }
+      pomSettings = (basePomSettings) {
+        artifactId = "algebra-laws"
+        version = "0.0.0-BENCH"
+      }
+    }
+    testTemplate = (template.asTest()) {
+      scalaVersion = "3.3.7"
+      sources {
+        "jvm/src/main/scala"
+        "scala"
+      }
+      deps {
+        "org.scalameta::munit:1.3.0"
+        "org.typelevel::discipline-munit:2.0.0"
+      }
+    }
+  }.get
+
+local const alleycatsLaws =
+  new CreateScalaModules {
+    root = "alleycats-laws"
+    id = "alleycatsLaws"
+    layout = "sbt"
+    template = new ScalaModule {
+      scalaVersion = "3.3.7"
+      scalacOptions {
+        "-Ykind-projector"
+        "-source:3.0-migration"
+      }
+      deps {
+        "org.typelevel::scalac-compat-annotation:0.1.4"
+        "org.typelevel::discipline-core:1.7.0"
+      }
+      moduleDeps {
+        alleycatsCore.main
+        laws.main
+      }
+      pomSettings = (basePomSettings) {
+        artifactId = "alleycats-laws"
+        version = "0.0.0-BENCH"
+      }
+    }
+    testTemplate = (template.asTest()) {
+      scalaVersion = "3.3.7"
+      deps {
+        "org.scalameta::munit:1.3.0"
+        "org.typelevel::discipline-munit:2.0.0"
+      }
+    }
+  }.get
+
+local const testkit =
+  new CreateScalaModules {
+    root = "testkit"
+    id = "testkit"
+    layout = "sbt"
+    template = new ScalaModule {
+      scalaVersion = "3.3.7"
+      scalacOptions {
+        "-Ykind-projector"
+        "-source:3.0-migration"
+      }
+      deps {
+        "org.typelevel::scalac-compat-annotation:0.1.4"
+        "org.typelevel::discipline-core:1.7.0"
+      }
+      moduleDeps {
+        core.main
+        laws.main
+      }
+      pomSettings = (basePomSettings) {
+        artifactId = "cats-testkit"
+        version = "0.0.0-BENCH"
+      }
+    }
+    testTemplate = (template.asTest()) {
+      scalaVersion = "3.3.7"
+      deps {}
+    }
+  }.get
+
+modules {
+  ...kernel.all
+  ...algebra.all
+  ...core.all
+  ...kernelLaws.all
+  free.main
+  // TODO fix this
+  // free.test
+  ...alleycatsCore.all
+  ...laws.all
+  ...algebraLaws.all
+  ...alleycatsLaws.all
+  ...testkit.all
+}
