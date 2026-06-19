@@ -421,9 +421,9 @@ tools:
     repo: cats
     setup: |
       # sbt generates some sources..
-      sbt algebra/compile
-      sbt kernel/compile
-      sbt core/compile
+      sbt "algebra/compile"
+      sbt "kernel/compile"
+      sbt "core/compile"
       deder exec -t compile
     benchmarks:
       compile-single-module:
